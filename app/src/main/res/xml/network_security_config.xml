@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext (HTTP) traffic only for localhost development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Allow HTTP for Android emulator localhost -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- Allow HTTP for physical device localhost (change IP as needed) -->
+        <domain includeSubdomains="true">192.168.1.0/24</domain>
+        <!-- Allow HTTP for localhost -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">192.168.2.91</domain>
+    </domain-config>
+    
+    <!-- All other domains require HTTPS in production -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">*</domain>
+    </domain-config>
+</network-security-config>
