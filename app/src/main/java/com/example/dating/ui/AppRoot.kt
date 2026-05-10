@@ -18,26 +18,13 @@ package com.example.dating.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dating.ui.auth.AuthViewModel
-import com.example.dating.ui.auth.LoginScreen
+import com.example.dating.ui.profile.ProfileScreen
 
 /**
  * Root composable that handles the app entry point.
- * Displays the login screen for authentication.
+ * Displays the dating profile concept screen.
  */
 @Composable
 fun AppRoot(modifier: Modifier = Modifier) {
-    // Get auth view model
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
-
-    // Show login screen
-    LoginScreen(
-        authViewModel = authViewModel,
-        onLoginSuccess = {
-            // Handle successful login - e.g., navigate to main app content
-            // TODO: Add navigation to main app screen after successful login
-        },
-        modifier = modifier
-    )
+    ProfileScreen(modifier = modifier)
 }

@@ -1,128 +1,204 @@
-/*
- * Copyright (C) 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.dating.ui.auth
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.dating.ui.theme.Black900
+import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.BrandPinkDark
+import com.example.dating.ui.theme.Gray700
+import com.example.dating.ui.theme.SecondaryPurple
 
-/**
- * Login screen composable
- */
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    LaunchedEffect(authViewModel.loginUiState) {
+        if (authViewModel.loginUiState is LoginUiState.Success) {
+            onLoginSuccess()
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Color.White)
+            .padding(horizontal = 28.dp, vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Title
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(Brush.linearGradient(listOf(BrandPinkDark, BrandPink))),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "❤", color = Color.White, style = MaterialTheme.typography.headlineLarge)
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
         Text(
-            text = "Login",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 32.dp)
+            text = "Student Connect",
+            style = MaterialTheme.typography.headlineLarge,
+            color = Black900,
+            textAlign = TextAlign.Center
         )
 
-        // Email input
-        OutlinedTextField(
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Kết nối sinh viên",
+            style = MaterialTheme.typography.titleLarge,
+            color = Gray700,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        LoginField(
             value = authViewModel.usernameInput,
-            onValueChange = { authViewModel.updateUsername(it) },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth(),
+            onValueChange = authViewModel::updateUsername,
+            placeholder = "Tên đăng nhập",
+            leadingIcon = Icons.Outlined.AccountCircle,
             enabled = authViewModel.loginUiState !is LoginUiState.Loading
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Password input
-        OutlinedTextField(
+        LoginField(
             value = authViewModel.passwordInput,
-            onValueChange = { authViewModel.updatePassword(it) },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
+            onValueChange = authViewModel::updatePassword,
+            placeholder = "Mật khẩu",
+            leadingIcon = Icons.Outlined.Lock,
             visualTransformation = PasswordVisualTransformation(),
             enabled = authViewModel.loginUiState !is LoginUiState.Loading
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
-        // Login button or loading indicator
-        when (authViewModel.loginUiState) {
+        when (val state = authViewModel.loginUiState) {
             is LoginUiState.Loading -> {
-                CircularProgressIndicator()
-            }
-
-            is LoginUiState.Success -> {
-                Text(
-                    text = "Login successful!",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                // Auto navigate on success after a short delay
-                onLoginSuccess()
+                CircularProgressIndicator(color = BrandPink)
             }
 
             is LoginUiState.Error -> {
-                val errorState = authViewModel.loginUiState as LoginUiState.Error
                 Text(
-                    text = errorState.message,
+                    text = state.message,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
                 )
-                Button(
-                    onClick = { authViewModel.login() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Login")
-                }
+                Spacer(modifier = Modifier.height(12.dp))
+                LoginButton(onClick = authViewModel::login)
             }
 
-            LoginUiState.Idle -> {
-                Button(
-                    onClick = { authViewModel.login() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Login")
-                }
+            else -> {
+                LoginButton(onClick = authViewModel::login)
             }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Chưa có tài khoản? ",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Gray700
+            )
+            Text(
+                text = "Đăng ký ngay",
+                style = MaterialTheme.typography.bodyLarge,
+                color = SecondaryPurple,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoginField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+    enabled: Boolean = true
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder) },
+        leadingIcon = { Icon(leadingIcon, contentDescription = null, tint = Gray700) },
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        singleLine = true,
+        enabled = enabled,
+        visualTransformation = visualTransformation,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
+    )
+}
+
+@Composable
+private fun LoginButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(68.dp),
+        shape = RoundedCornerShape(34.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(34.dp))
+                .background(Brush.horizontalGradient(listOf(BrandPinkDark, BrandPink))),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Đăng nhập",
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }

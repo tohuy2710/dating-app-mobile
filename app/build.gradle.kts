@@ -27,7 +27,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.marsphotos"
+        applicationId = "com.example.dating"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
