@@ -16,9 +16,13 @@
 
 package com.example.dating.ui
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.dating.ui.profile.ProfileScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.dating.ui.navigation.AppNavHost
+import com.example.dating.ui.navigation.BottomBar
 
 /**
  * Root composable that handles the app entry point.
@@ -26,5 +30,17 @@ import com.example.dating.ui.profile.ProfileScreen
  */
 @Composable
 fun AppRoot(modifier: Modifier = Modifier) {
-    ProfileScreen(modifier = modifier)
+    val navController = rememberNavController()
+
+    Scaffold(
+        bottomBar = {
+            BottomBar(navController)
+        }
+    ) { paddingValues ->
+
+        AppNavHost(
+            navController = navController,
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
 }
