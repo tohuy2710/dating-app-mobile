@@ -34,3 +34,11 @@ val BorderGray = Color(0xFFF7F8F8)
 val BlackColor = Black900
 val GrayColor = Gray700
 val SecondaryColor = SecondaryPurple
+
+// Dark theme colors for chat
+val DarkBackground = Color(0xFF1A1A1A)
+val DarkSurface = Color(0xFF2A2A2A)
+val DarkText = Color(0xFFFFFFFF)
+val DarkSecondaryText = Color(0xFFB0B0B0)
+val ChatBubblePink = Color(0xFFD73E6F)
+val ChatBubblePurple = Color(0xFF7C5CFF)

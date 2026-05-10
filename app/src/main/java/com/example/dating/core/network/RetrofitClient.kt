@@ -32,7 +32,7 @@ object RetrofitClient {
     // Update this to your backend URL
     // For localhost development: http://10.0.2.2:3000 (for Android Emulator)
     // For physical device: http://your-machine-ip:3000
-    private const val BASE_URL = "http://192.168.2.91:3000/"
+    private const val BASE_URL = "http://192.168.1.10:3000/"
 
     private val json = Json {
         ignoreUnknownKeys = true
