@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,9 +36,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -46,15 +50,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.dating.R
 import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BorderGray
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
-import com.example.dating.ui.theme.Gray500
 import com.example.dating.ui.theme.Gray700
 import com.example.dating.ui.theme.SecondaryPurple
 import com.example.dating.ui.theme.White
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.material.icons.filled.LocationOn
 
 @Composable
 fun ProfileScreen(modifier: Modifier = Modifier) {
@@ -104,7 +111,7 @@ private fun HeroImage() {
             .background(Color(0xFFF2D0D8))
     ) {
         androidx.compose.foundation.Image(
-            painter = painterResource(id = R.drawable.loading_img),
+            painter = painterResource(id = R.drawable.thl),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -125,13 +132,25 @@ private fun ActionButtonsRow(modifier: Modifier = Modifier) {
             size = 56.dp,
             solidColor = SecondaryPurple,
             icon = Icons.Default.Close,
-            iconTint = White
+            iconTint = White,
+            iconModifier = Modifier.drawWithContent {
+                val contentDrawScope = this
+                drawContent()
+                // Draw once more with a tiny shift to make the stroke feel bolder.
+                translate(left = 0.6f, top = 0f) {
+                    contentDrawScope.drawContent()
+                }
+            }
         )
         FloatingActionButton(
             size = 72.dp,
             background = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
-            icon = Icons.Default.Close,
-            iconTint = White
+            icon = Icons.Default.Send,
+            iconTint = White,
+            iconModifier = Modifier.graphicsLayer {
+                rotationZ = -45f
+                transformOrigin = TransformOrigin.Center
+            }.offset(x = 4.dp)
         )
         FloatingActionButton(
             size = 56.dp,
@@ -148,7 +167,8 @@ private fun FloatingActionButton(
     background: Brush? = null,
     solidColor: Color? = null,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconTint: Color
+    iconTint: Color,
+    iconModifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     var pressed by remember { mutableStateOf(false) }
@@ -178,7 +198,7 @@ private fun FloatingActionButton(
         if (background != null) {
             Box(modifier = Modifier.matchParentSize().background(background))
         }
-        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(size * 0.42f))
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(size * 0.8f).then(iconModifier))
     }
 }
 
@@ -200,12 +220,19 @@ private fun ProfileCard() {
                     .background(Color(0xFFE8F5E9)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "ĐH", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold)
+                androidx.compose.foundation.Image(
+                    painter = painterResource(id = R.drawable.vnu),
+                    contentDescription = "VNU logo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(6.dp)
+                )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Shi Zzu KKKa, 2005",
+                    text = "Trần Hà Linh, 2006",
                     color = BrandPink,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -222,7 +249,7 @@ private fun ProfileCard() {
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Favorite, contentDescription = null, tint = SecondaryPurple)
+            Icon(Icons.Default.LocationOn, contentDescription = null, tint = SecondaryPurple)
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "Cầu Giấy",
@@ -251,20 +278,26 @@ private fun ProfileCard() {
 
 @Composable
 private fun InterestChips() {
-    Column(
+    val labels = listOf(
+        "Thanh Hóa",
+        "Ăn rau má",
+        "Học androidddd",
+        "Phó đường tàu",
+        "Đồ thơm mỡ ai đó 123666"
+    )
+    ChipRow(labels = labels)
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ChipRow(labels: List<String>) {
+    FlowRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        ChipRow(listOf("Thanh Hóa", "Ăn rau má", "Học androidddd"))
-        ChipRow(listOf("Phó đường tàu", "Đồ thơm mỡ ai đó 123666"))
-    }
-}
-
-@Composable
-private fun ChipRow(labels: List<String>) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         labels.forEach { label ->
             Surface(
                 color = Color(0xFFF1F1F1),
@@ -360,4 +393,10 @@ private fun QACard(question: String, answer: String) {
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileScreenPreview() {
+    ProfileScreen()
 }

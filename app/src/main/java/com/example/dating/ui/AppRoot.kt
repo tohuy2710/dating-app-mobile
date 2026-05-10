@@ -18,13 +18,34 @@ package com.example.dating.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.dating.ui.profile.ProfileScreen
+import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
+import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 
-/**
- * Root composable that handles the app entry point.
- * Displays the dating profile concept screen.
- */
+private object AppRoute {
+    const val TraditionalMatchingHome = "traditional_matching_home"
+    const val Profile = "profile"
+}
+
 @Composable
 fun AppRoot(modifier: Modifier = Modifier) {
-    ProfileScreen(modifier = modifier)
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = AppRoute.TraditionalMatchingHome,
+        modifier = modifier
+    ) {
+        composable(AppRoute.TraditionalMatchingHome) {
+            TraditionalMatchingHomeScreen(
+                onMatchNowClick = { navController.navigate(AppRoute.Profile) }
+            )
+        }
+        composable(AppRoute.Profile) {
+            ProfileScreen()
+        }
+    }
 }
