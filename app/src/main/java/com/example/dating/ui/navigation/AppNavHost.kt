@@ -1,17 +1,19 @@
 package com.example.dating.ui.navigation
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import com.example.dating.ui.chat.ChatScreen
-import com.example.dating.ui.chat.ConversationScreen
-import com.example.dating.ui.chat.ChatOptionsScreen
-import com.example.dating.ui.chat.MockChatData
+import com.example.dating.ui.chat.*
 import com.example.dating.ui.profile.ProfileScreen
+import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 
 @Composable
 fun AppNavHost(
@@ -19,88 +21,93 @@ fun AppNavHost(
     modifier: Modifier = Modifier
 ) {
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Chat.route,
-        modifier = modifier
-    ) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-        composable(Screen.Chat.route) {
+    val hideBottomBar =
+        currentRoute?.startsWith("conversation") == true ||
+                currentRoute?.startsWith("chat_options") == true
 
-            ChatScreen(
-                onConversationSelected = { conversation ->
-
-                    navController.navigate(
-                        Screen.Conversation.createRoute(
-                            conversation.matchId
-                        )
-                    )
-                }
-            )
+    Scaffold(
+        bottomBar = {
+            if (!hideBottomBar) {
+                BottomBar(navController)
+            }
         }
+    ) { paddingValues ->
 
-        composable(
-            route = Screen.Conversation.route,
-            arguments = listOf(
-                navArgument("matchId") {
-                    type = NavType.IntType
-                }
-            )
-        ) { backStackEntry ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Traditional.route,
+            modifier = modifier.padding(paddingValues)
+        ) {
 
-            val matchId =
-                backStackEntry.arguments?.getInt("matchId")
+            composable(Screen.Traditional.route) {
+                TraditionalMatchingHomeScreen()
+            }
 
-            val conversation =
-                MockChatData.generateConversations()
+            composable(Screen.Chat.route) {
+                ChatScreen(
+                    onConversationSelected = { conversation ->
+                        navController.navigate(
+                            Screen.Conversation.createRoute(conversation.matchId)
+                        )
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.Conversation.route,
+                arguments = listOf(
+                    navArgument("matchId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+
+                val matchId = backStackEntry.arguments?.getInt("matchId")
+
+                val conversation = MockChatData.generateConversations()
                     .find { it.matchId == matchId }
 
-            conversation?.let {
-
-                ConversationScreen(
-                    conversation = it,
-                    onBackClick = {
-                        navController.popBackStack()
-                    },
-                    onAvatarClick = {
-                        navController.navigate(Screen.ChatOptions.createRoute(it.matchId))
-                    }
-                )
-            }
-        }
-
-        composable(
-            route = Screen.ChatOptions.route,
-            arguments = listOf(
-                navArgument("matchId") {
-                    type = NavType.IntType
+                conversation?.let {
+                    ConversationScreen(
+                        conversation = it,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onAvatarClick = {
+                            navController.navigate(
+                                Screen.ChatOptions.createRoute(it.matchId)
+                            )
+                        }
+                    )
                 }
-            )
-        ) { backStackEntry ->
-            val matchId = backStackEntry.arguments?.getInt("matchId")
-            val conversation = MockChatData.generateConversations()
-                .find { it.matchId == matchId }
+            }
 
-            conversation?.let {
-                ChatOptionsScreen(
-                    user = it.user,
-                    onBackClick = {
-                        navController.popBackStack()
-                    }
+            composable(
+                route = Screen.ChatOptions.route,
+                arguments = listOf(
+                    navArgument("matchId") { type = NavType.IntType }
                 )
+            ) { backStackEntry ->
+
+                val matchId = backStackEntry.arguments?.getInt("matchId")
+
+                val conversation = MockChatData.generateConversations()
+                    .find { it.matchId == matchId }
+
+                conversation?.let {
+                    ChatOptionsScreen(
+                        user = it.user,
+                        onBackClick = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+            composable(Screen.Profile.route) {
+                ProfileScreen()
             }
         }
-
-        composable(Screen.Profile.route) {
-            ProfileScreen()
-        }
-
-//        composable(Screen.Traditional.route) {
-//            TraditionalMatchScreen()
-//        }
-//
-//        composable(Screen.Anonymous.route) {
-//            AnonymousMatchScreen()
-//        }
     }
 }

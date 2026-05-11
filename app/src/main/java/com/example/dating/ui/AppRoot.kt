@@ -1,46 +1,29 @@
-/*
- * Copyright (C) 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.dating.ui
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
 import androidx.navigation.compose.rememberNavController
+import com.example.dating.ui.navigation.AuthNavHost
 import com.example.dating.ui.navigation.AppNavHost
-import com.example.dating.ui.navigation.BottomBar
 
-/**
- * Root composable that handles the app entry point.
- * Displays the dating profile concept screen.
- */
 @Composable
-fun AppRoot(modifier: Modifier = Modifier) {
-    val navController = rememberNavController()
+fun AppRoot() {
 
-    Scaffold(
-        bottomBar = {
-            BottomBar(navController)
-        }
-    ) { paddingValues ->
+    // giả lập login state (sau này thay bằng token)
+    var isLoggedIn by remember { mutableStateOf(false) }
 
+    val authNavController = rememberNavController()
+    val mainNavController = rememberNavController()
+
+    if (!isLoggedIn) {
+        AuthNavHost(
+            navController = authNavController,
+            onAuthSuccess = {
+                isLoggedIn = true
+            }
+        )
+    } else {
         AppNavHost(
-            navController = navController,
-            modifier = Modifier.padding(paddingValues)
+            navController = mainNavController
         )
     }
 }

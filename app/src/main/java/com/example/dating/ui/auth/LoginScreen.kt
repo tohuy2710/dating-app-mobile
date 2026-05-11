@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -44,6 +45,7 @@ import com.example.dating.ui.theme.SecondaryPurple
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
+    onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LaunchedEffect(authViewModel.loginUiState) {
@@ -67,7 +69,12 @@ fun LoginScreen(
                 .background(Brush.linearGradient(listOf(BrandPinkDark, BrandPink))),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "❤", color = Color.White, style = MaterialTheme.typography.headlineLarge)
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(64.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -128,7 +135,7 @@ fun LoginScreen(
             }
 
             else -> {
-                LoginButton(onClick = authViewModel::login)
+                LoginButton(onClick = onLoginSuccess)
             }
         }
 
@@ -145,7 +152,9 @@ fun LoginScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 color = SecondaryPurple,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { }
+                modifier = Modifier.clickable {
+                    onRegisterClick()
+                }
             )
         }
     }
@@ -190,7 +199,7 @@ private fun LoginButton(onClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(34.dp))
-                .background(Brush.horizontalGradient(listOf(BrandPinkDark, BrandPink))),
+                .background(Brush.linearGradient(listOf(BrandPinkDark, BrandPink))),
             contentAlignment = Alignment.Center
         ) {
             Text(

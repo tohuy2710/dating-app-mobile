@@ -2,8 +2,10 @@ package com.example.dating.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Masks
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Icon
@@ -53,8 +55,8 @@ fun BottomBar(
                     Icon(
                         imageVector = when (screen) {
                             Screen.Traditional -> Icons.Default.Favorite
-                            Screen.Anonymous -> Icons.Default.Person
-                            Screen.Chat -> Icons.Default.Chat
+                            Screen.Anonymous -> Icons.Filled.Masks
+                            Screen.Chat -> Icons.Filled.Chat
                             Screen.Profile -> Icons.Default.Person
                             else -> Icons.Default.Person
                         },

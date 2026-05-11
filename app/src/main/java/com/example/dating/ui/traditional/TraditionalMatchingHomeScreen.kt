@@ -132,8 +132,8 @@ private fun MatchNowButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                brush = Brush.horizontalGradient(
-                    listOf(Color(0xFFFF5BBE), Color(0xFFFF0050))
+                brush = Brush.linearGradient(
+                    listOf(BrandPinkDark, BrandPink)
                 ),
                 shape = RoundedCornerShape(999.dp)
             )

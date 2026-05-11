@@ -2,6 +2,10 @@ package com.example.dating.ui.navigation
 
 sealed class Screen(val route: String) {
 
+    object Login : Screen("login")
+
+    object Register : Screen("register")
+
     object Traditional : Screen("traditional")
 
     object Anonymous : Screen("anonymous")
