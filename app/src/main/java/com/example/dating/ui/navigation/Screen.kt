@@ -13,6 +13,12 @@ sealed class Screen(val route: String) {
     object Chat : Screen("chat")
 
     object Profile : Screen("profile")
+    
+    object MatchProfile : Screen("match_profile")
+
+    object Settings : Screen("settings")
+
+    object EditInterests : Screen("edit_interests")
 
     object Conversation : Screen("conversation/{matchId}") {
 

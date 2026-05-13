@@ -1,9 +1,13 @@
 package com.example.dating.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -12,7 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.dating.ui.chat.*
-import com.example.dating.ui.profile.ProfileScreen
+import com.example.dating.ui.profile.*
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 
 @Composable
@@ -26,7 +30,10 @@ fun AppNavHost(
 
     val hideBottomBar =
         currentRoute?.startsWith("conversation") == true ||
-                currentRoute?.startsWith("chat_options") == true
+                currentRoute?.startsWith("chat_options") == true ||
+                currentRoute == Screen.MatchProfile.route ||
+                currentRoute == Screen.Settings.route ||
+                currentRoute == Screen.EditInterests.route
 
     Scaffold(
         bottomBar = {
@@ -43,7 +50,20 @@ fun AppNavHost(
         ) {
 
             composable(Screen.Traditional.route) {
-                TraditionalMatchingHomeScreen()
+                TraditionalMatchingHomeScreen(
+                    onMatchNowClick = {
+                        navController.navigate(Screen.MatchProfile.route)
+                    }
+                )
+            }
+
+            composable(Screen.Anonymous.route) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Anonymous matching coming soon")
+                }
             }
 
             composable(Screen.Chat.route) {
@@ -54,6 +74,22 @@ fun AppNavHost(
                         )
                     }
                 )
+            }
+
+            composable(Screen.MatchProfile.route) {
+                ProfileScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Screen.Settings.route) {
+                SettingsScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable(Screen.EditInterests.route) {
+                InterestsSelectionScreen(onBackClick = { navController.popBackStack() })
             }
 
             composable(
@@ -106,7 +142,10 @@ fun AppNavHost(
             }
 
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                UserProfileScreen(
+                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                    onEditInterestsClick = { navController.navigate(Screen.EditInterests.route) }
+                )
             }
         }
     }
