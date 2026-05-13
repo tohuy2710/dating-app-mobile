@@ -11,10 +11,8 @@ import com.example.dating.ui.navigation.AppNavHost
 fun AppRoot(
     authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
 ) {
-    // Trạng thái đăng nhập
     var isLoggedIn by remember { mutableStateOf<Boolean?>(null) }
 
-    // Kiểm tra token khi khởi chạy ứng dụng
     LaunchedEffect(Unit) {
         authViewModel.checkAuthStatus { isAuth ->
             isLoggedIn = isAuth
@@ -24,9 +22,7 @@ fun AppRoot(
     val authNavController = rememberNavController()
     val mainNavController = rememberNavController()
 
-    // Chờ kiểm tra trạng thái đăng nhập
     if (isLoggedIn == null) {
-        // Có thể hiển thị màn hình Splash hoặc Loading ở đây
         return
     }
 
