@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.ui.auth.LoginScreen
 import com.example.dating.ui.auth.RegisterScreen
+import com.example.dating.ui.preferences.PreferencesScreen
 import com.example.dating.ui.auth.AuthViewModel
 
 @Composable
@@ -41,6 +42,17 @@ fun AuthNavHost(
                     navController.popBackStack()
                 },
                 onRegisterSuccess = {
+                    navController.navigate(Screen.Preferences.route)
+                }
+            )
+        }
+
+        composable(Screen.Preferences.route) {
+            PreferencesScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onComplete = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }

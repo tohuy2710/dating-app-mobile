@@ -24,13 +24,18 @@ import androidx.room.RoomDatabase
 /**
  * Room database for storing application data locally.
  */
-@Database(entities = [TokenEntity::class], version = 1, exportSchema = false)
+@Database(entities = [TokenEntity::class, UserPreferencesEntity::class], version = 2, exportSchema = false)
 abstract class DatingDatabase : RoomDatabase() {
 
     /**
      * DAO for token operations.
      */
     abstract fun tokenDao(): TokenDao
+
+    /**
+     * DAO for user preferences operations.
+     */
+    abstract fun preferencesDao(): PreferencesDao
 
     companion object {
         @Volatile

@@ -48,6 +48,11 @@ fun LoginScreen(
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Làm mới trạng thái khi vào màn hình đăng nhập
+    LaunchedEffect(Unit) {
+        authViewModel.resetState()
+    }
+
     LaunchedEffect(authViewModel.loginUiState) {
         if (authViewModel.loginUiState is LoginUiState.Success) {
             onLoginSuccess()
@@ -135,7 +140,7 @@ fun LoginScreen(
             }
 
             else -> {
-                LoginButton(onClick = onLoginSuccess)
+                LoginButton(onClick = authViewModel::login)
             }
         }
 
