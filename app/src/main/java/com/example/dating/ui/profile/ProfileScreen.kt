@@ -63,8 +63,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material.icons.filled.LocationOn
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.IconButton
+
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {}
+) {
     val scrollState = rememberScrollState()
 
     Column(
@@ -76,6 +82,21 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             HeroImage()
+            
+            // Back button
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = White
+                )
+            }
+
             ActionButtonsRow(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
