@@ -66,6 +66,23 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     /**
+     * Checks if there's a valid token stored locally.
+     * If found, sets the state to success to bypass login screen.
+     */
+    fun checkAuthStatus(onFinished: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val token = authRepository.getLatestToken()
+            if (token != null) {
+                // Here you might want to verify the token with the server
+                // For now, we assume if it exists, it's valid or we'll handle 401 later
+                onFinished(true)
+            } else {
+                onFinished(false)
+            }
+        }
+    }
+
+    /**
      * Performs login with the provided username and password.
      * Saves the token to local database upon successful login.
      */

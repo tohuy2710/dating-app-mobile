@@ -326,14 +326,12 @@ fun RegisterScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
         RegisterButton(
             onClick = onRegisterSuccess,
             text = "Tiếp theo"
         )
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 fun shouldBlockDigit(digits: String): Boolean {
