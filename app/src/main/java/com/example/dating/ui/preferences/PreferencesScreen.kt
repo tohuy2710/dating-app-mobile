@@ -52,8 +52,8 @@ import com.example.dating.ui.theme.Gray700
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PreferencesScreen(
+    onComplete: (selectedInterests: List<String>, targetGender: String?, minAge: String, maxAge: String, maxDistance: String) -> Unit,
     onBackClick: () -> Unit,
-    onComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -224,7 +224,9 @@ fun PreferencesScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         Button(
-            onClick = onComplete,
+            onClick = {
+                onComplete(selectedInterests.toList(), targetGender, minAge, maxAge, maxDistance)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(68.dp),

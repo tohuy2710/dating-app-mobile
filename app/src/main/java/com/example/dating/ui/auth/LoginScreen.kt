@@ -50,7 +50,7 @@ fun LoginScreen(
 ) {
     // Làm mới trạng thái khi vào màn hình đăng nhập
     LaunchedEffect(Unit) {
-        authViewModel.resetState()
+        authViewModel.resetLoginState()
     }
 
     LaunchedEffect(authViewModel.loginUiState) {
@@ -103,9 +103,9 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         LoginField(
-            value = authViewModel.usernameInput,
-            onValueChange = authViewModel::updateUsername,
-            placeholder = "Tên đăng nhập",
+            value = authViewModel.loginEmail,
+            onValueChange = authViewModel::updateLoginEmail,
+            placeholder = "Email",
             leadingIcon = Icons.Outlined.AccountCircle,
             enabled = authViewModel.loginUiState !is LoginUiState.Loading
         )
@@ -113,8 +113,8 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         LoginField(
-            value = authViewModel.passwordInput,
-            onValueChange = authViewModel::updatePassword,
+            value = authViewModel.loginPassword,
+            onValueChange = authViewModel::updateLoginPassword,
             placeholder = "Mật khẩu",
             leadingIcon = Icons.Outlined.Lock,
             visualTransformation = PasswordVisualTransformation(),

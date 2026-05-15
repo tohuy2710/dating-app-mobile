@@ -2,7 +2,20 @@ package com.example.dating.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,8 +25,23 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,29 +53,88 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.R
-import com.example.dating.ui.theme.*
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import com.example.dating.data.model.User
+import com.example.dating.ui.theme.Black900
+import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.Gray700
+import com.example.dating.ui.theme.SecondaryPurple
+import com.example.dating.ui.theme.White
 
 @Composable
 fun UserProfileScreen(
     modifier: Modifier = Modifier,
     onSettingsClick: () -> Unit = {},
-    onEditInterestsClick: () -> Unit = {}
+    onEditInterestsClick: () -> Unit = {},
+    profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
+) {
+    UserProfileScreenContent(
+        modifier = modifier,
+        profileUiState = profileViewModel.profileUiState,
+        onRetry = profileViewModel::loadProfile,
+        onSettingsClick = onSettingsClick,
+        onEditInterestsClick = onEditInterestsClick
+    )
+}
+
+@Composable
+private fun UserProfileScreenContent(
+    modifier: Modifier = Modifier,
+    profileUiState: ProfileUiState,
+    onRetry: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onEditInterestsClick: () -> Unit
+) {
+    when (val state = profileUiState) {
+        ProfileUiState.Loading -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF7F7F7)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = BrandPink)
+            }
+        }
+
+        is ProfileUiState.Error -> {
+            UserProfileErrorState(
+                modifier = modifier,
+                message = state.message,
+                onRetry = onRetry
+            )
+        }
+
+        is ProfileUiState.Success -> {
+            UserProfileLoadedContent(
+                modifier = modifier,
+                user = state.user,
+                onSettingsClick = onSettingsClick,
+                onEditInterestsClick = onEditInterestsClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserProfileLoadedContent(
+    modifier: Modifier = Modifier,
+    user: User,
+    onSettingsClick: () -> Unit,
+    onEditInterestsClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    
-    // States for Editing
-    var isEditing by remember { mutableStateOf(false) }
-    var name by remember { mutableStateOf("Trần Hà Linh") }
-    var age by remember { mutableStateOf("2006") }
-    var bio by remember { mutableStateOf("Kích thước cơ bản cho Android thường là 360x576, 360x640 hoặc 360x720 (tỉ lệ 16:10, 16:9 hoặc 2:1).") }
-    var question by remember { mutableStateOf("Gu cua em la j?") }
-    var answer by remember { mutableStateOf("ng thanh hoa") }
-    
-    var showPhotoDialog by remember { mutableStateOf(false) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    var isEditing by rememberSaveable { mutableStateOf(false) }
+    var name by remember(user.userId) { mutableStateOf(user.fullName) }
+    var age by remember(user.userId) { mutableStateOf(user.birthDate.toBirthYear()) }
+    var bio by remember(user.userId) { mutableStateOf(user.bio.orEmpty()) }
+    var question by rememberSaveable { mutableStateOf("Gu cua em la j?") }
+    var answer by rememberSaveable { mutableStateOf("ng thanh hoa") }
+
+    var showPhotoDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -76,7 +163,9 @@ fun UserProfileScreen(
             age = age,
             onAgeChange = { age = it },
             bio = bio,
-            onBioChange = { bio = it }
+            onBioChange = { bio = it },
+            subtitle = user.toSubtitle(),
+            location = "Việt Nam"
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -96,23 +185,26 @@ fun UserProfileScreen(
             answer = answer,
             onAnswerChange = { answer = it }
         )
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         DeleteAccountButton(onDeleteClick = { showDeleteConfirm = true })
     }
 
-    // Dialogs
     if (showPhotoDialog) {
         AlertDialog(
             onDismissRequest = { showPhotoDialog = false },
             title = { Text("Add Photo") },
             text = { Text("Choose a photo from your gallery or take a new one.") },
             confirmButton = {
-                TextButton(onClick = { showPhotoDialog = false }) { Text("Gallery", color = BrandPink) }
+                TextButton(onClick = { showPhotoDialog = false }) {
+                    Text("Gallery", color = BrandPink)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showPhotoDialog = false }) { Text("Camera", color = BrandPink) }
+                TextButton(onClick = { showPhotoDialog = false }) {
+                    Text("Camera", color = BrandPink)
+                }
             }
         )
     }
@@ -123,12 +215,46 @@ fun UserProfileScreen(
             title = { Text("Delete Account?") },
             text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Delete", color = Color.Red) }
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Delete", color = Color.Red)
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
             }
         )
+    }
+}
+
+@Composable
+private fun UserProfileErrorState(
+    modifier: Modifier = Modifier,
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF7F7F7))
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = message,
+            color = Black900,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = BrandPink)
+        ) {
+            Text("Retry")
+        }
     }
 }
 
@@ -146,7 +272,7 @@ private fun UserHeroImage(onSettingsClick: () -> Unit) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        
+
         IconButton(
             onClick = onSettingsClick,
             modifier = Modifier
@@ -173,7 +299,7 @@ private fun UserActionButtons(
         modifier = modifier.size(56.dp)
     ) {
         Icon(
-            if (isEditing) Icons.Default.Check else Icons.Default.Edit, 
+            if (isEditing) Icons.Default.Check else Icons.Default.Edit,
             contentDescription = if (isEditing) "Save" else "Edit Profile"
         )
     }
@@ -187,7 +313,9 @@ private fun UserPersonalInfoCard(
     age: String,
     onAgeChange: (String) -> Unit,
     bio: String,
-    onBioChange: (String) -> Unit
+    onBioChange: (String) -> Unit,
+    subtitle: String,
+    location: String
 ) {
     Column(
         modifier = Modifier
@@ -213,13 +341,13 @@ private fun UserPersonalInfoCard(
             )
         } else {
             Text(
-                text = "$name, $age",
+                text = displayNameAndAge(name = name, age = age),
                 color = Black900,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Software Developer",
+                text = subtitle,
                 color = Gray700,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
@@ -229,10 +357,15 @@ private fun UserPersonalInfoCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.LocationOn, contentDescription = null, tint = SecondaryPurple, modifier = Modifier.size(18.dp))
+            Icon(
+                Icons.Default.LocationOn,
+                contentDescription = null,
+                tint = SecondaryPurple,
+                modifier = Modifier.size(18.dp)
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Hanoi, Vietnam",
+                text = location,
                 color = Gray700,
                 fontSize = 14.sp
             )
@@ -247,7 +380,7 @@ private fun UserPersonalInfoCard(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         if (isEditing) {
             OutlinedTextField(
                 value = bio,
@@ -257,7 +390,7 @@ private fun UserPersonalInfoCard(
             )
         } else {
             Text(
-                text = bio,
+                text = bio.ifBlank { "Chưa có mô tả" },
                 color = Gray700,
                 fontSize = 14.sp,
                 lineHeight = 20.sp
@@ -285,7 +418,7 @@ private fun UserInterestChips(onEditInterestsClick: () -> Unit) {
                 Text("Edit", color = BrandPink)
             }
         }
-        
+
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -327,8 +460,11 @@ private fun UserGalleryGrid(onAddPhotoClick: () -> Unit) {
                 Text("Add Photo", color = BrandPink)
             }
         }
-        
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
             UserGalleryTile(modifier = Modifier.weight(1f))
             UserGalleryTile(modifier = Modifier.weight(1f))
             UserGalleryTile(modifier = Modifier.weight(1f))
@@ -374,7 +510,7 @@ private fun UserQACards(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
         )
-        
+
         Surface(
             color = White,
             shape = RoundedCornerShape(14.dp),
@@ -425,8 +561,44 @@ private fun DeleteAccountButton(onDeleteClick: () -> Unit) {
     }
 }
 
+private fun String?.toBirthYear(): String {
+    return this?.takeIf { it.length >= 4 }?.substring(0, 4).orEmpty()
+}
+
+private fun displayNameAndAge(name: String, age: String): String {
+    return if (age.isBlank()) name else "$name, $age"
+}
+
+private fun User.toSubtitle(): String {
+    val genderLabel = when (gender?.uppercase()) {
+        "M" -> "Nam"
+        "F" -> "Nữ"
+        "O" -> "Khác"
+        else -> null
+    }
+
+    return listOfNotNull(genderLabel, email.takeIf { it.isNotBlank() })
+        .joinToString(" • ")
+        .ifBlank { "Dating profile" }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun UserProfileScreenPreview() {
-    UserProfileScreen()
+    UserProfileScreenContent(
+        profileUiState = ProfileUiState.Success(
+            User(
+                userId = 1,
+                email = "linh@example.com",
+                fullName = "Trần Hà Linh",
+                birthDate = "2006-01-01",
+                gender = "F",
+                bio = "Thích cà phê, âm nhạc và những cuộc trò chuyện tử tế.",
+                createdAt = "2026-01-01T00:00:00Z"
+            )
+        ),
+        onRetry = {},
+        onSettingsClick = {},
+        onEditInterestsClick = {}
+    )
 }

@@ -26,7 +26,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.dating.DatingApplication
-import com.example.dating.data.model.LoginResponse
+import com.example.dating.data.model.LoginResponseData
+import com.example.dating.data.model.RegisterResponseData
 import com.example.dating.data.repository.AuthRepository
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -38,32 +39,129 @@ import java.io.IOException
 sealed interface LoginUiState {
     object Idle : LoginUiState
     object Loading : LoginUiState
-    data class Success(val response: LoginResponse) : LoginUiState
+    data class Success(val response: LoginResponseData) : LoginUiState
     data class Error(val message: String) : LoginUiState
 }
 
 /**
- * ViewModel for handling authentication logic and login operations.
+ * UI state for the Register screen
+ */
+sealed interface RegisterUiState {
+    object Idle : RegisterUiState
+    object Loading : RegisterUiState
+    data class Success(val response: RegisterResponseData) : RegisterUiState
+    data class Error(val message: String) : RegisterUiState
+}
+
+/**
+ * ViewModel for handling authentication logic and login/register operations.
  */
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
-    /** The mutable State that stores the status of the login request */
+    // ============== LOGIN STATE ==============
+    
     var loginUiState: LoginUiState by mutableStateOf(LoginUiState.Idle)
         private set
 
-    var usernameInput: String by mutableStateOf("")
+    var loginEmail: String by mutableStateOf("")
         private set
 
-    var passwordInput: String by mutableStateOf("")
+    var loginPassword: String by mutableStateOf("")
         private set
 
-    fun updateUsername(newUsername: String) {
-        usernameInput = newUsername
+    fun updateLoginEmail(newEmail: String) {
+        loginEmail = newEmail
     }
 
-    fun updatePassword(newPassword: String) {
-        passwordInput = newPassword
+    fun updateLoginPassword(newPassword: String) {
+        loginPassword = newPassword
     }
+
+    /**
+     * Pre-fills login fields with provided credentials (used after successful registration)
+     */
+    fun prefillLoginCredentials(email: String, password: String) {
+        loginEmail = email
+        loginPassword = password
+    }
+
+    // ============== REGISTER STATE ==============
+
+    var registerUiState: RegisterUiState by mutableStateOf(RegisterUiState.Idle)
+        private set
+
+    var registerEmail: String by mutableStateOf("")
+        private set
+
+    var registerPassword: String by mutableStateOf("")
+        private set
+
+    var registerFullName: String by mutableStateOf("")
+        private set
+
+    var registerBirthDate: String by mutableStateOf("")
+        private set
+
+    var registerGender: String by mutableStateOf("")
+        private set
+
+    var registerBio: String by mutableStateOf("")
+        private set
+
+    var selectedInterests: List<String> by mutableStateOf(emptyList())
+        private set
+
+    var targetGenderPreference: String? by mutableStateOf(null)
+        private set
+
+    var minAgePreference: String by mutableStateOf("")
+        private set
+
+    var maxAgePreference: String by mutableStateOf("")
+        private set
+
+    var maxDistancePreference: String by mutableStateOf("")
+        private set
+
+    fun updateRegisterEmail(newEmail: String) {
+        registerEmail = newEmail
+    }
+
+    fun updateRegisterPassword(newPassword: String) {
+        registerPassword = newPassword
+    }
+
+    fun updateRegisterFullName(newName: String) {
+        registerFullName = newName
+    }
+
+    fun updateRegisterBirthDate(newDate: String) {
+        registerBirthDate = newDate
+    }
+
+    fun updateRegisterGender(newGender: String) {
+        registerGender = newGender
+    }
+
+    fun updateRegisterBio(newBio: String) {
+        registerBio = newBio
+    }
+
+    fun savePreferences(
+        interests: List<String>,
+        targetGender: String?,
+        minAge: String,
+        maxAge: String,
+        maxDistance: String
+    ) {
+        selectedInterests = interests
+        targetGenderPreference = targetGender
+        minAgePreference = minAge
+        maxAgePreference = maxAge
+        maxDistancePreference = maxDistance
+    }
+
+    // ============== AUTH OPERATIONS ==============
 
     /**
      * Checks if there's a valid token stored locally.
@@ -83,25 +181,25 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     /**
-     * Performs login with the provided username and password.
+     * Performs login with the provided email and password.
      * Saves the token to local database upon successful login.
      */
     fun login() {
-        if (usernameInput.isEmpty() || passwordInput.isEmpty()) {
-            loginUiState = LoginUiState.Error("Username and password are required")
+        if (loginEmail.isEmpty() || loginPassword.isEmpty()) {
+            loginUiState = LoginUiState.Error("Email and password are required")
             return
         }
 
         viewModelScope.launch {
             loginUiState = LoginUiState.Loading
             loginUiState = try {
-                val result = authRepository.login(usernameInput, passwordInput)
+                val result = authRepository.login(loginEmail, loginPassword)
                 
                 // Save token to local database
-                authRepository.saveToken(result.token, result.tokenType, result.expiresAt)
+                authRepository.saveToken(result.token, "Bearer", result.token)
                 
                 // Clear password for security
-                passwordInput = ""
+                loginPassword = ""
                 LoginUiState.Success(result)
             } catch (e: IOException) {
                 LoginUiState.Error("Network error. Please check your connection.")
@@ -114,10 +212,79 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     /**
+     * Performs user registration with provided information.
+     * Saves the token to local database upon successful registration.
+     */
+    fun register() {
+        // Validation
+        if (registerEmail.isEmpty() || registerPassword.isEmpty() || registerFullName.isEmpty()) {
+            registerUiState = RegisterUiState.Error("Email, password, and full name are required")
+            return
+        }
+
+        if (registerPassword.length < 6) {
+            registerUiState = RegisterUiState.Error("Password must be at least 6 characters")
+            return
+        }
+
+        viewModelScope.launch {
+            registerUiState = RegisterUiState.Loading
+            registerUiState = try {
+                val result = authRepository.register(
+                    email = registerEmail,
+                    password = registerPassword,
+                    fullName = registerFullName,
+                    birthDate = registerBirthDate.ifEmpty { null },
+                    gender = registerGender.ifEmpty { null },
+                    bio = registerBio.ifEmpty { null }
+                )
+                
+                // Save token to local database
+                authRepository.saveToken(result.token, "Bearer", result.token)
+                
+                // Clear sensitive data for security
+                registerPassword = ""
+                RegisterUiState.Success(result)
+            } catch (e: IOException) {
+                RegisterUiState.Error("Network error. Please check your connection.")
+            } catch (e: HttpException) {
+                RegisterUiState.Error("Registration failed. Please check your information.")
+            } catch (e: Exception) {
+                RegisterUiState.Error("An unexpected error occurred: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Refreshes the authentication token
+     */
+    fun refreshToken() {
+        viewModelScope.launch {
+            try {
+                val currentToken = authRepository.getLatestToken()
+                if (currentToken != null) {
+                    val newToken = authRepository.refreshToken(currentToken.token)
+                    authRepository.saveToken(newToken, "Bearer", newToken)
+                }
+            } catch (e: Exception) {
+                // Token refresh failed, user may need to log in again
+                logout()
+            }
+        }
+    }
+
+    /**
      * Resets the login state to Idle
      */
-    fun resetState() {
+    fun resetLoginState() {
         loginUiState = LoginUiState.Idle
+    }
+
+    /**
+     * Resets the register state to Idle
+     */
+    fun resetRegisterState() {
+        registerUiState = RegisterUiState.Idle
     }
 
     /**
@@ -126,9 +293,21 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun logout() {
         viewModelScope.launch {
             authRepository.clearTokens()
-            usernameInput = ""
-            passwordInput = ""
+            loginEmail = ""
+            loginPassword = ""
+            registerEmail = ""
+            registerPassword = ""
+            registerFullName = ""
+            registerBirthDate = ""
+            registerGender = ""
+            registerBio = ""
+            selectedInterests = emptyList()
+            targetGenderPreference = null
+            minAgePreference = ""
+            maxAgePreference = ""
+            maxDistancePreference = ""
             loginUiState = LoginUiState.Idle
+            registerUiState = RegisterUiState.Idle
         }
     }
 

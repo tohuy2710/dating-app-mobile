@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -122,23 +124,47 @@ fun validateDateInput(digits: String): String? {
     return null
 }
 
+// Convert dateDigits from dd/mm/yyyy format to YYYY-MM-DD format
+fun convertDateDigitsToISO(digits: String): String? {
+    if (digits.length != 8) return null
+    val day = digits.substring(0, 2)
+    val month = digits.substring(2, 4)
+    val year = digits.substring(4, 8)
+    return "$year-$month-$day"
+}
+
+fun shouldBlockDigit(digits: String): Boolean {
+    if (digits.length >= 1 && digits[0].digitToInt() > 3) return true
+    if (digits.length >= 3 && digits[2].digitToInt() > 1) return true
+    return false
+}
+
 @Composable
 fun RegisterScreen(
+    authViewModel: AuthViewModel,
     onBackClick: () -> Unit,
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (email: String, password: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val username = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
-    val fullName = remember { mutableStateOf("") }
     val dateDigits = remember { mutableStateOf("") }
     val dateError = remember { mutableStateOf<String?>(null) }
-    val gender = remember { mutableStateOf("") }
-    val school = remember { mutableStateOf("") }
     val genderExpanded = remember { mutableStateOf(false) }
-    val selectedImagePath = remember { mutableStateOf<String?>(null) }
+    
+    val genderOptions = listOf("male", "female", "other")
+    val genderDisplayMap = mapOf("male" to "Nam", "female" to "Nữ", "other" to "Khác")
 
-    val genderOptions = listOf("Nam", "Nữ", "Khác")
+    // Handle successful registration
+    LaunchedEffect(authViewModel.registerUiState) {
+        if (authViewModel.registerUiState is RegisterUiState.Success) {
+            // Pass credentials to navigate back to login and pre-fill
+            onRegisterSuccess(authViewModel.registerEmail, authViewModel.registerPassword)
+        }
+    }
+
+    // Reset state when entering screen
+    LaunchedEffect(Unit) {
+        authViewModel.resetRegisterState()
+    }
 
     Column(
         modifier = modifier
@@ -178,29 +204,32 @@ fun RegisterScreen(
         }
 
         RegisterField(
-            value = username.value,
-            onValueChange = { username.value = it },
-            placeholder = "Tên đăng nhập",
-            leadingIcon = Icons.Outlined.AccountCircle
+            value = authViewModel.registerEmail,
+            onValueChange = authViewModel::updateRegisterEmail,
+            placeholder = "Email",
+            leadingIcon = Icons.Outlined.AccountCircle,
+            enabled = authViewModel.registerUiState !is RegisterUiState.Loading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         RegisterField(
-            value = password.value,
-            onValueChange = { password.value = it },
-            placeholder = "Mật khẩu",
+            value = authViewModel.registerPassword,
+            onValueChange = authViewModel::updateRegisterPassword,
+            placeholder = "Mật khẩu (tối thiểu 6 ký tự)",
             leadingIcon = Icons.Outlined.Lock,
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            enabled = authViewModel.registerUiState !is RegisterUiState.Loading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         RegisterField(
-            value = fullName.value,
-            onValueChange = { fullName.value = it },
+            value = authViewModel.registerFullName,
+            onValueChange = authViewModel::updateRegisterFullName,
             placeholder = "Tên đầy đủ",
-            leadingIcon = Icons.Outlined.Person
+            leadingIcon = Icons.Outlined.Person,
+            enabled = authViewModel.registerUiState !is RegisterUiState.Loading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -209,14 +238,18 @@ fun RegisterScreen(
             value = dateDigits.value,
             onValueChange = { newValue ->
                 val digits = newValue.filter { it.isDigit() }.take(8)
-
                 val blocked = shouldBlockDigit(digits)
                 if (!blocked) {
                     dateDigits.value = digits
                     dateError.value = validateDateInput(digits)
+                    if (digits.length == 8) {
+                        convertDateDigitsToISO(digits)?.let {
+                            authViewModel.updateRegisterBirthDate(it)
+                        }
+                    }
                 }
             },
-            placeholder = { Text("dd/mm/yyyy") },
+            placeholder = { Text("dd/mm/yyyy (tùy chọn)") },
             leadingIcon = {
                 Icon(
                     Icons.Outlined.DateRange,
@@ -235,16 +268,23 @@ fun RegisterScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             visualTransformation = DateVisualTransformation(),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900)
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
+            enabled = authViewModel.registerUiState !is RegisterUiState.Loading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = authViewModel.registerUiState !is RegisterUiState.Loading
+                ) { genderExpanded.value = !genderExpanded.value }
+        ) {
             OutlinedTextField(
-                value = gender.value,
+                value = genderDisplayMap[authViewModel.registerGender] ?: "Giới tính",
                 onValueChange = {},
-                placeholder = { Text("Giới tính") },
+                placeholder = { Text("Giới tính (tùy chọn)") },
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Person,
@@ -252,11 +292,8 @@ fun RegisterScreen(
                         tint = Gray700
                     )
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { genderExpanded.value = !genderExpanded.value },
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                readOnly = true,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
                 enabled = false
             )
@@ -264,13 +301,15 @@ fun RegisterScreen(
             DropdownMenu(
                 expanded = genderExpanded.value,
                 onDismissRequest = { genderExpanded.value = false },
-                modifier = Modifier.fillMaxWidth(0.9f)
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .align(Alignment.TopStart)
             ) {
                 genderOptions.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { Text(genderDisplayMap[option] ?: option) },
                         onClick = {
-                            gender.value = option
+                            authViewModel.updateRegisterGender(option)
                             genderExpanded.value = false
                         }
                     )
@@ -281,66 +320,44 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         RegisterField(
-            value = school.value,
-            onValueChange = { school.value = it },
-            placeholder = "Trường đang theo học",
-            leadingIcon = Icons.Outlined.Info
+            value = authViewModel.registerBio,
+            onValueChange = authViewModel::updateRegisterBio,
+            placeholder = "Bio (tùy chọn)",
+            leadingIcon = Icons.Outlined.Info,
+            enabled = authViewModel.registerUiState !is RegisterUiState.Loading
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF5F5F5))
-                .padding(24.dp)
-                .clickable { /* Handle image selection */ },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+        when (val state = authViewModel.registerUiState) {
+            is RegisterUiState.Loading -> {
+                CircularProgressIndicator(color = BrandPink)
+            }
+
+            is RegisterUiState.Error -> {
                 Text(
-                    text = "⬆",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Gray700,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Tải ảnh thẻ sinh viên",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Gray700,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold
+                RegisterButton(
+                    onClick = { authViewModel.register() },
+                    text = "Đăng ký",
+                    enabled = true
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "PNG, JPG tối đa 10MB",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Gray700,
-                    textAlign = TextAlign.Center
+            }
+
+            else -> {
+                RegisterButton(
+                    onClick = { authViewModel.register() },
+                    text = "Đăng ký",
+                    enabled = authViewModel.registerUiState !is RegisterUiState.Loading
                 )
             }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        RegisterButton(
-            onClick = onRegisterSuccess,
-            text = "Tiếp theo"
-        )
     }
-}
-fun shouldBlockDigit(digits: String): Boolean {
-
-    if (digits.length >= 1 && digits[0].digitToInt() > 3) return true
-
-    if (digits.length >= 3 && digits[2].digitToInt() > 1) return true
-
-    return false
 }
 
 @Composable
@@ -350,7 +367,8 @@ private fun RegisterField(
     placeholder: String,
     leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
@@ -361,14 +379,16 @@ private fun RegisterField(
         shape = RoundedCornerShape(18.dp),
         singleLine = true,
         visualTransformation = visualTransformation,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900)
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
+        enabled = enabled
     )
 }
 
 @Composable
 private fun RegisterButton(
     onClick: () -> Unit,
-    text: String = "Tiếp theo"
+    text: String = "Đăng ký",
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
@@ -377,7 +397,8 @@ private fun RegisterButton(
             .height(68.dp),
         shape = RoundedCornerShape(34.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+        enabled = enabled
     ) {
         Box(
             modifier = Modifier

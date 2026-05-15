@@ -19,13 +19,33 @@ package com.example.dating.data.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+// ============== LOGIN ==============
+
 /**
  * Login request data class for sending credentials to the backend API.
  */
 @Serializable
 data class LoginRequest(
-    val username: String,
+    val email: String,
     val password: String
+)
+
+/**
+ * User data class from API response
+ */
+@Serializable
+data class User(
+    @SerialName("user_id")
+    val userId: Int,
+    val email: String,
+    @SerialName("full_name")
+    val fullName: String,
+    @SerialName("birth_date")
+    val birthDate: String? = null,
+    val gender: String? = null,
+    val bio: String? = null,
+    @SerialName("created_at")
+    val createdAt: String
 )
 
 /**
@@ -33,16 +53,60 @@ data class LoginRequest(
  * Matches the actual backend response structure.
  */
 @Serializable
+data class LoginResponseData(
+    val user: User,
+    val token: String
+)
+
+@Serializable
 data class LoginResponse(
     val message: String,
     val token: String,
     @SerialName("token_type")
-    val tokenType: String,
+    val tokenType: String = "Bearer",
     @SerialName("expires_in")
-    val expiresIn: Long,
+    val expiresIn: Long = 604800, // 7 days in seconds
     @SerialName("expires_at")
     val expiresAt: String
 )
+
+// ============== REGISTER ==============
+
+/**
+ * Register request data class for sending user registration data to the backend API.
+ */
+@Serializable
+data class RegisterRequest(
+    val email: String,
+    val password: String,
+    @SerialName("full_name")
+    val fullName: String,
+    @SerialName("birth_date")
+    val birthDate: String? = null,
+    val gender: String? = null,
+    val bio: String? = null
+)
+
+/**
+ * Register response data class received from the backend API.
+ */
+@Serializable
+data class RegisterResponseData(
+    val user: User,
+    val token: String
+)
+
+// ============== REFRESH TOKEN ==============
+
+/**
+ * Refresh token response data class
+ */
+@Serializable
+data class RefreshTokenResponseData(
+    val token: String
+)
+
+// ============== LOCAL STORAGE ==============
 
 /**
  * Token data class for storing in SQLite.
@@ -50,7 +114,7 @@ data class LoginResponse(
 @Serializable
 data class TokenEntity(
     val token: String,
-    val tokenType: String,
+    val tokenType: String = "Bearer",
     val expiresAt: String,
     val createdAt: Long = System.currentTimeMillis()
 )

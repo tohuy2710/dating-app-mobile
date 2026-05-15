@@ -9,7 +9,7 @@
         <!-- Allow HTTP for localhost -->
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">192.168.2.91</domain>
+        <domain includeSubdomains="true">192.168.0.110</domain>
     </domain-config>
     
     <!-- All other domains require HTTPS in production -->

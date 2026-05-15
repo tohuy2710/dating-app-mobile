@@ -17,6 +17,9 @@ fun AuthNavHost(
     modifier: Modifier = Modifier,
     onAuthSuccess: () -> Unit
 ) {
+    // Create a single AuthViewModel instance for both Login and Register screens
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route,
@@ -24,9 +27,6 @@ fun AuthNavHost(
     ) {
 
         composable(Screen.Login.route) {
-            val authViewModel: AuthViewModel =
-                viewModel(factory = AuthViewModel.Factory)
-
             LoginScreen(
                 authViewModel = authViewModel,
                 onLoginSuccess = onAuthSuccess,
@@ -38,24 +38,40 @@ fun AuthNavHost(
 
         composable(Screen.Register.route) {
             RegisterScreen(
+                authViewModel = authViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onRegisterSuccess = {
-                    navController.navigate(Screen.Preferences.route)
+                onRegisterSuccess = { email, password ->
+                    navController.navigate(Screen.Preferences.route) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
 
         composable(Screen.Preferences.route) {
             PreferencesScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onComplete = {
+                onComplete = { selectedInterests, targetGender, minAge, maxAge, maxDistance ->
+                    authViewModel.savePreferences(
+                        interests = selectedInterests,
+                        targetGender = targetGender,
+                        minAge = minAge,
+                        maxAge = maxAge,
+                        maxDistance = maxDistance
+                    )
+                    // Pre-fill login credentials with registered account
+                    authViewModel.prefillLoginCredentials(
+                        authViewModel.registerEmail,
+                        authViewModel.registerPassword
+                    )
+                    // Navigate back to login screen after preferences are completed
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
+                },
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }
