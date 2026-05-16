@@ -37,15 +37,29 @@ data class LoginRequest(
 data class User(
     @SerialName("user_id")
     val userId: Int,
-    val email: String,
+    val email: String? = null,
     @SerialName("full_name")
     val fullName: String,
     @SerialName("birth_date")
     val birthDate: String? = null,
     val gender: String? = null,
     val bio: String? = null,
+    @SerialName("avatar_url")
+    val avatarUrl: String? = null,
+    @SerialName("primary_photo")
+    val primaryPhoto: UserPhoto? = null,
     @SerialName("created_at")
     val createdAt: String
+)
+
+@Serializable
+data class UserPhoto(
+    @SerialName("photo_id")
+    val photoId: Int,
+    @SerialName("image_url")
+    val imageUrl: String,
+    @SerialName("is_primary")
+    val isPrimary: Boolean
 )
 
 /**

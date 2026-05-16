@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
@@ -65,17 +66,31 @@ import com.example.dating.ui.theme.White
 @Composable
 fun UserProfileScreen(
     modifier: Modifier = Modifier,
+    user: User? = null,
+    onBackClick: (() -> Unit)? = null,
     onSettingsClick: () -> Unit = {},
     onEditInterestsClick: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
 ) {
-    UserProfileScreenContent(
-        modifier = modifier,
-        profileUiState = profileViewModel.profileUiState,
-        onRetry = profileViewModel::loadProfile,
-        onSettingsClick = onSettingsClick,
-        onEditInterestsClick = onEditInterestsClick
-    )
+    if (user != null) {
+        UserProfileLoadedContent(
+            modifier = modifier,
+            user = user,
+            onBackClick = onBackClick,
+            onSettingsClick = onSettingsClick,
+            onEditInterestsClick = onEditInterestsClick,
+            isCurrentUser = false
+        )
+    } else {
+        UserProfileScreenContent(
+            modifier = modifier,
+            profileUiState = profileViewModel.profileUiState,
+            onRetry = profileViewModel::loadProfile,
+            onBackClick = onBackClick,
+            onSettingsClick = onSettingsClick,
+            onEditInterestsClick = onEditInterestsClick
+        )
+    }
 }
 
 @Composable
@@ -83,6 +98,7 @@ private fun UserProfileScreenContent(
     modifier: Modifier = Modifier,
     profileUiState: ProfileUiState,
     onRetry: () -> Unit,
+    onBackClick: (() -> Unit)?,
     onSettingsClick: () -> Unit,
     onEditInterestsClick: () -> Unit
 ) {
@@ -110,8 +126,10 @@ private fun UserProfileScreenContent(
             UserProfileLoadedContent(
                 modifier = modifier,
                 user = state.user,
+                onBackClick = onBackClick,
                 onSettingsClick = onSettingsClick,
-                onEditInterestsClick = onEditInterestsClick
+                onEditInterestsClick = onEditInterestsClick,
+                isCurrentUser = true
             )
         }
     }
@@ -121,8 +139,10 @@ private fun UserProfileScreenContent(
 private fun UserProfileLoadedContent(
     modifier: Modifier = Modifier,
     user: User,
+    onBackClick: (() -> Unit)?,
     onSettingsClick: () -> Unit,
-    onEditInterestsClick: () -> Unit
+    onEditInterestsClick: () -> Unit,
+    isCurrentUser: Boolean = true
 ) {
     val scrollState = rememberScrollState()
 
@@ -144,14 +164,20 @@ private fun UserProfileLoadedContent(
             .padding(bottom = 24.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            UserHeroImage(onSettingsClick)
-            UserActionButtons(
-                isEditing = isEditing,
-                onEditToggle = { isEditing = !isEditing },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 12.dp)
+            UserHeroImage(
+                onSettingsClick = onSettingsClick,
+                onBackClick = onBackClick,
+                showSettings = isCurrentUser
             )
+            if (isCurrentUser) {
+                UserActionButtons(
+                    isEditing = isEditing,
+                    onEditToggle = { isEditing = !isEditing },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 24.dp, bottom = 12.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -186,9 +212,10 @@ private fun UserProfileLoadedContent(
             onAnswerChange = { answer = it }
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        DeleteAccountButton(onDeleteClick = { showDeleteConfirm = true })
+        if (isCurrentUser) {
+            Spacer(modifier = Modifier.height(24.dp))
+            DeleteAccountButton(onDeleteClick = { showDeleteConfirm = true })
+        }
     }
 
     if (showPhotoDialog) {
@@ -259,7 +286,11 @@ private fun UserProfileErrorState(
 }
 
 @Composable
-private fun UserHeroImage(onSettingsClick: () -> Unit) {
+private fun UserHeroImage(
+    onSettingsClick: () -> Unit,
+    onBackClick: (() -> Unit)?,
+    showSettings: Boolean = true
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -273,14 +304,32 @@ private fun UserHeroImage(onSettingsClick: () -> Unit) {
             modifier = Modifier.fillMaxSize()
         )
 
-        IconButton(
-            onClick = onSettingsClick,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .background(Color.Black.copy(alpha = 0.3f), CircleShape)
-        ) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = White)
+        if (onBackClick != null) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = White
+                )
+            }
+        }
+
+        if (showSettings) {
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = White)
+            }
         }
     }
 }
@@ -577,7 +626,7 @@ private fun User.toSubtitle(): String {
         else -> null
     }
 
-    return listOfNotNull(genderLabel, email.takeIf { it.isNotBlank() })
+    return listOfNotNull(genderLabel, email?.takeIf { it.isNotBlank() })
         .joinToString(" • ")
         .ifBlank { "Dating profile" }
 }
@@ -598,6 +647,7 @@ fun UserProfileScreenPreview() {
             )
         ),
         onRetry = {},
+        onBackClick = null,
         onSettingsClick = {},
         onEditInterestsClick = {}
     )

@@ -17,11 +17,20 @@
 package com.example.dating.di
 
 import android.content.Context
-import com.example.dating.core.network.RetrofitClient
+import com.example.dating.core.network.AuthInterceptor
 import com.example.dating.data.local.DatingDatabase
 import com.example.dating.data.remote.AuthApiService
+import com.example.dating.data.remote.MatchingApiService
 import com.example.dating.data.repository.AuthRepository
+import com.example.dating.data.repository.MatchingRepository
 import com.example.dating.data.repository.NetworkAuthRepository
+import com.example.dating.data.repository.NetworkMatchingRepository
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
 
 /**
  * Dependency Injection container at the application level.
@@ -29,6 +38,7 @@ import com.example.dating.data.repository.NetworkAuthRepository
  */
 interface AppContainer {
     val authRepository: AuthRepository
+    val matchingRepository: MatchingRepository
 }
 
 /**
@@ -38,6 +48,12 @@ interface AppContainer {
  */
 class DefaultAppContainer(private val context: Context) : AppContainer {
 
+    private val BASE_URL = "http://192.168.0.110:8080/api/"
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
     /**
      * Database instance for local data storage
      */
@@ -46,10 +62,48 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     }
 
     /**
+     * Logging interceptor for debugging network requests
+     */
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+
+    /**
+     * Auth interceptor to add tokens to requests
+     */
+    private val authInterceptor by lazy {
+        AuthInterceptor(database.tokenDao())
+    }
+
+    /**
+     * OkHttpClient with auth and logging interceptors
+     */
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(authInterceptor)
+        .addInterceptor(loggingInterceptor)
+        .build()
+
+    /**
+     * Retrofit instance
+     */
+    private val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(okHttpClient)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+
+    /**
      * Retrofit service object for authentication endpoints
      */
     private val authApiService: AuthApiService by lazy {
-        RetrofitClient.retrofitInstance.create(AuthApiService::class.java)
+        retrofit.create(AuthApiService::class.java)
+    }
+
+    /**
+     * Retrofit service object for matching endpoints
+     */
+    private val matchingApiService: MatchingApiService by lazy {
+        retrofit.create(MatchingApiService::class.java)
     }
 
     /**
@@ -57,5 +111,12 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
      */
     override val authRepository: AuthRepository by lazy {
         NetworkAuthRepository(authApiService, database.tokenDao())
+    }
+
+    /**
+     * DI implementation for matching repository
+     */
+    override val matchingRepository: MatchingRepository by lazy {
+        NetworkMatchingRepository(matchingApiService)
     }
 }

@@ -3,21 +3,26 @@ package com.example.dating.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.ui.chat.*
 import com.example.dating.ui.profile.*
+import com.example.dating.ui.traditional.TraditionalMatchProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
+import com.example.dating.ui.traditional.TraditionalMatchingViewModel
 
 @Composable
 fun AppNavHost(
@@ -31,7 +36,7 @@ fun AppNavHost(
     val hideBottomBar =
         currentRoute?.startsWith("conversation") == true ||
                 currentRoute?.startsWith("chat_options") == true ||
-                currentRoute == Screen.MatchProfile.route ||
+                currentRoute?.startsWith("match_profile") == true ||
                 currentRoute == Screen.Settings.route ||
                 currentRoute == Screen.EditInterests.route
 
@@ -50,9 +55,16 @@ fun AppNavHost(
         ) {
 
             composable(Screen.Traditional.route) {
+                val matchingViewModel: TraditionalMatchingViewModel = viewModel(
+                    factory = TraditionalMatchingViewModel.Factory
+                )
+
                 TraditionalMatchingHomeScreen(
-                    onMatchNowClick = {
-                        navController.navigate(Screen.MatchProfile.route)
+                    viewModel = matchingViewModel,
+                    onMatchNowClick = { user ->
+                        navController.navigate(
+                            Screen.MatchProfile.createRoute(user.userId)
+                        )
                     }
                 )
             }
@@ -76,10 +88,41 @@ fun AppNavHost(
                 )
             }
 
-            composable(Screen.MatchProfile.route) {
-                ProfileScreen(
+            composable(
+                route = Screen.MatchProfile.route,
+                arguments = listOf(
+                    navArgument("userId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val userId = backStackEntry.arguments?.getInt("userId")
+                val matchingViewModel: TraditionalMatchingViewModel = viewModel(
+                    navController.getBackStackEntry(Screen.Traditional.route),
+                    factory = TraditionalMatchingViewModel.Factory
+                )
+                val currentProfile by matchingViewModel.currentDiscoveryProfile.collectAsStateWithLifecycle()
+                val currentTargetId by matchingViewModel.currentDiscoveryTargetId.collectAsStateWithLifecycle()
+                val user = currentProfile?.takeIf { it.userId == currentTargetId || it.userId == userId }
+
+                LaunchedEffect(userId, currentProfile, currentTargetId) {
+                    if (user == null && currentProfile == null) {
+                        matchingViewModel.loadDiscoveryProfiles(reset = false)
+                    }
+                }
+
+                TraditionalMatchProfileScreen(
+                    user = user,
+                    targetUserId = currentTargetId ?: userId,
                     onBackClick = {
                         navController.popBackStack()
+                    },
+                    onPassClick = {
+                        matchingViewModel.passCurrentDiscoveryUser(currentTargetId ?: userId)
+                    },
+                    onMatchNowClick = {
+                        matchingViewModel.likeCurrentDiscoveryUser(currentTargetId ?: userId)
+                    },
+                    onLikeClick = {
+                        matchingViewModel.likeCurrentDiscoveryUser(currentTargetId ?: userId)
                     }
                 )
             }

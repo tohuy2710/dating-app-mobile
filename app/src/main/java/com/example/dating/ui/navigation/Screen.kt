@@ -16,7 +16,9 @@ sealed class Screen(val route: String) {
 
     object Profile : Screen("profile")
     
-    object MatchProfile : Screen("match_profile")
+    object MatchProfile : Screen("match_profile/{userId}") {
+        fun createRoute(userId: Int) = "match_profile/$userId"
+    }
 
     object Settings : Screen("settings")
 
