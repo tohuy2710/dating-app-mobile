@@ -16,12 +16,16 @@
 
 package com.example.dating.core.network
 
+import com.example.dating.core.config.AppConfig
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 
 /**
  * Singleton object for Retrofit client configuration.
@@ -32,7 +36,7 @@ object RetrofitClient {
     // Update this to your backend URL
     // For localhost development: http://10.0.2.2:3000 (for Android Emulator)
     // For physical device: http://your-machine-ip:3000
-    private const val BASE_URL = "http://192.168.1.10:3000/"
+    private const val BASE_URL = "http://10.0.2.2:5000/"
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -42,8 +46,24 @@ object RetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    /**
+     * Authentication interceptor that adds JWT token to all requests.
+     * Adds: Authorization: Bearer {token}
+     */
+    private val authInterceptor = Interceptor { chain ->
+        val originalRequest: Request = chain.request()
+        val requestWithToken = originalRequest.newBuilder()
+            .header("Authorization", "Bearer ${AppConfig.MOCK_JWT_TOKEN}")
+            .build()
+        chain.proceed(requestWithToken)
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
+        .addInterceptor(authInterceptor)  // Add auth interceptor first
+        .addInterceptor(loggingInterceptor)  // Then logging
+        .connectTimeout(AppConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(AppConfig.READ_TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(AppConfig.WRITE_TIMEOUT, TimeUnit.SECONDS)
         .build()
 
     val retrofitInstance: Retrofit = Retrofit.Builder()

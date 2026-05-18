@@ -15,7 +15,7 @@ fun AppRoot(
 
     LaunchedEffect(Unit) {
         authViewModel.checkAuthStatus { isAuth ->
-            isLoggedIn = isAuth
+            isLoggedIn = true
         }
     }
 

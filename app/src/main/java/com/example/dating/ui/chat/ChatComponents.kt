@@ -120,7 +120,7 @@ fun SuggestedConnectionCard(
         ) {
 
             AsyncImage(
-                model = suggestion.user.avatarUrl,
+                model = suggestion.user.getDisplayAvatarUrl(),
                 contentDescription = suggestion.user.fullName,
                 modifier = Modifier
                     .size(70.dp)
@@ -225,7 +225,7 @@ fun MessageItem(
         ) {
 
             AsyncImage(
-                model = conversation.user.avatarUrl,
+                model = conversation.user.getDisplayAvatarUrl(),
                 contentDescription = conversation.user.fullName,
                 modifier = Modifier
                     .size(56.dp)
@@ -267,12 +267,6 @@ fun MessageItem(
                     color = DarkText,
                     modifier = Modifier.weight(1f)
                 )
-
-                Text(
-                    text = formatMessageTime(conversation.lastMessageTime),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Gray500
-                )
             }
 
             Text(
@@ -307,39 +301,6 @@ fun MessageItem(
                     fontWeight = FontWeight.Bold
                 )
             }
-        }
-    }
-}
-
-/**
- * Formats message time for display.
- */
-private fun formatMessageTime(timestamp: Long): String {
-
-    val now = System.currentTimeMillis()
-    val diff = now - timestamp
-
-    return when {
-
-        diff < 60000 ->
-            "Now"
-
-        diff < 3600000 ->
-            "${diff / 60000}m"
-
-        diff < 86400000 ->
-            "${diff / 3600000}h"
-
-        diff < 604800000 -> {
-
-            val sdf = SimpleDateFormat("EEEE", Locale.getDefault())
-            sdf.format(Date(timestamp))
-        }
-
-        else -> {
-
-            val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-            sdf.format(Date(timestamp))
         }
     }
 }

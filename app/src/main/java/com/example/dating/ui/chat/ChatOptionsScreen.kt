@@ -25,10 +25,74 @@ import coil.compose.AsyncImage
 import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkText
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 @Composable
 fun ChatOptionsScreen(
+    matchId: Int,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ConversationViewModel = viewModel(
+        factory = ConversationViewModelFactory(matchId)
+    )
+) {
+    when (val state = viewModel.conversationUiState) {
+        ConversationUiState.Loading -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(DarkBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Loading...", color = DarkText)
+            }
+        }
+        is ConversationUiState.Success -> {
+            ChatOptionsScreenContent(
+                user = state.conversation.user,
+                onBackClick = onBackClick,
+                onBlockClick = {
+                    // TODO: Implement block functionality
+                    onBackClick()
+                },
+                onReportClick = {
+                    // TODO: Implement report functionality
+                    onBackClick()
+                },
+                onUnmatchClick = {
+                    viewModel.deleteMatch(matchId)
+                    onBackClick()
+                },
+                modifier = modifier
+            )
+        }
+        is ConversationUiState.Error -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(DarkBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Error loading user", color = DarkText)
+            }
+        }
+        ConversationUiState.Idle -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(DarkBackground)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChatOptionsScreenContent(
     user: ChatUser,
     onBackClick: () -> Unit,
+    onBlockClick: () -> Unit,
+    onReportClick: () -> Unit,
+    onUnmatchClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -61,7 +125,7 @@ fun ChatOptionsScreen(
 
         // Avatar
         AsyncImage(
-            model = user.avatarUrl,
+            model = user.getDisplayAvatarUrl(),
             contentDescription = user.fullName,
             modifier = Modifier
                 .size(100.dp)
@@ -74,7 +138,7 @@ fun ChatOptionsScreen(
         // Tên người dùng
         Text(
             text = user.fullName,
-            color = Color.White, // Có thể đổi thành DarkText nếu DarkText của bạn là màu sáng
+            color = Color.White,
             fontSize = 24.sp,
             fontWeight = FontWeight.Medium
         )
@@ -85,20 +149,17 @@ fun ChatOptionsScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
-                .clip(RoundedCornerShape(32.dp))
-                .background(Color(0xFF333335)) // Màu xám cho card
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF333335))
                 .padding(vertical = 12.dp)
         ) {
-            OptionItem(icon = Icons.Default.Person, title = "Xem hồ sơ")
+            OptionItem(icon = Icons.Outlined.Block, title = "Block", onClick = onBlockClick)
             Divider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 24.dp))
 
-            OptionItem(icon = Icons.Default.Delete, title = "Xóa đoạn chat")
+            OptionItem(icon = Icons.Default.Report, title = "Report", onClick = onReportClick)
             Divider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 24.dp))
 
-            OptionItem(icon = Icons.Default.Search, title = "Tìm kiếm")
-            Divider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 24.dp))
-
-            OptionItem(icon = Icons.Outlined.Image, title = "File phương tiện")
+            OptionItem(icon = Icons.Default.Delete, title = "Unmatch", onClick = onUnmatchClick)
         }
     }
 }

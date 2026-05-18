@@ -18,6 +18,8 @@ import androidx.navigation.navArgument
 import com.example.dating.ui.chat.*
 import com.example.dating.ui.profile.*
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Composable
 fun AppNavHost(
@@ -69,8 +71,16 @@ fun AppNavHost(
             composable(Screen.Chat.route) {
                 ChatScreen(
                     onConversationSelected = { conversation ->
+                        val conversationJson = try {
+                            Json.encodeToString(conversation)
+                        } catch (e: Exception) {
+                            ""
+                        }
                         navController.navigate(
-                            Screen.Conversation.createRoute(conversation.matchId)
+                            Screen.Conversation.createRoute(
+                                conversation.matchId,
+                                conversationJson
+                            )
                         )
                     }
                 )
@@ -84,35 +94,41 @@ fun AppNavHost(
                 )
             }
 
-            composable(Screen.Settings.route) {
-                SettingsScreen(onBackClick = { navController.popBackStack() })
-            }
-
-            composable(Screen.EditInterests.route) {
-                InterestsSelectionScreen(onBackClick = { navController.popBackStack() })
-            }
+//            composable(Screen.Settings.route) {
+//                SettingsScreen(onBackClick = { navController.popBackStack() })
+//            }
+//
+//            composable(Screen.EditInterests.route) {
+//                InterestsSelectionScreen(onBackClick = { navController.popBackStack() })
+//            }
 
             composable(
                 route = Screen.Conversation.route,
                 arguments = listOf(
-                    navArgument("matchId") { type = NavType.IntType }
+                    navArgument("matchId") { type = NavType.IntType },
+                    navArgument("conversation") { type = NavType.StringType }
                 )
             ) { backStackEntry ->
 
                 val matchId = backStackEntry.arguments?.getInt("matchId")
+                val conversationJson = backStackEntry.arguments?.getString("conversation")?.let {
+                    try {
+                        java.net.URLDecoder.decode(it, "UTF-8")
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
 
-                val conversation = MockChatData.generateConversations()
-                    .find { it.matchId == matchId }
-
-                conversation?.let {
+                if (matchId != null && conversationJson != null) {
                     ConversationScreen(
-                        conversation = it,
+                        matchId = matchId,
+                        conversationJson = conversationJson,
                         onBackClick = {
                             navController.popBackStack()
                         },
                         onAvatarClick = {
                             navController.navigate(
-                                Screen.ChatOptions.createRoute(it.matchId)
+                                Screen.ChatOptions.createRoute(matchId)
                             )
                         }
                     )
@@ -128,12 +144,9 @@ fun AppNavHost(
 
                 val matchId = backStackEntry.arguments?.getInt("matchId")
 
-                val conversation = MockChatData.generateConversations()
-                    .find { it.matchId == matchId }
-
-                conversation?.let {
+                if (matchId != null) {
                     ChatOptionsScreen(
-                        user = it.user,
+                        matchId = matchId,
                         onBackClick = {
                             navController.popBackStack()
                         }
@@ -141,12 +154,12 @@ fun AppNavHost(
                 }
             }
 
-            composable(Screen.Profile.route) {
-                UserProfileScreen(
-                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                    onEditInterestsClick = { navController.navigate(Screen.EditInterests.route) }
-                )
-            }
+//            composable(Screen.Profile.route) {
+//                UserProfileScreen(
+//                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
+//                    onEditInterestsClick = { navController.navigate(Screen.EditInterests.route) }
+//                )
+//            }
         }
     }
 }

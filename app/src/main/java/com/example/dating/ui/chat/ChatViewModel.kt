@@ -20,17 +20,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.dating.core.network.RetrofitClient
+import com.example.dating.data.remote.MatchesApiService
+import com.example.dating.data.repository.ChatRepository
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel for managing chat/messaging related state and business logic.
  * Handles conversations, messages, and suggested connections.
  * 
- * Mock data is based on the dating app database schema:
- * - Main user: id=1 (mainuser@gmail.com)
- * - Matches: user 1 with user 2 (Alice) and user 3 (Emma)
- * - Messages for each match conversation
+ * Loads data from real API endpoints via ChatRepository:
+ * - GET /api/matches - Fetch user matches
+ * - GET /api/matches/{matchId} - Fetch match details with messages
+ * - POST /api/matches/{matchId}/messages - Send messages
  */
 class ChatViewModel : ViewModel() {
+
+    private val matchesApiService: MatchesApiService by lazy {
+        RetrofitClient.retrofitInstance.create(MatchesApiService::class.java)
+    }
+    
+    private val chatRepository: ChatRepository by lazy {
+        ChatRepository(matchesApiService)
+    }
 
     var chatUiState: ChatUiState by mutableStateOf(ChatUiState.Idle)
         private set
@@ -47,25 +60,29 @@ class ChatViewModel : ViewModel() {
     }
 
     /**
-     * Loads mock chat data based on database schema.
-     * Simulates:
-     * - 2 active matches for the main user
-     * - Messages within each conversation
-     * - Suggested connections from non-matched users
+     * Loads chat data from API.
+     * 
+     * Fetches:
+     * - User matches via GET /api/matches
+     * - Suggested connections (when endpoint available)
      */
     private fun loadChatData() {
         chatUiState = ChatUiState.Loading
 
-        try {
-            val conversations = MockChatData.generateConversations()
-            val suggestions = MockChatData.generateSuggestions()
+        viewModelScope.launch {
+            try {
+                val conversations = chatRepository.fetchConversations(page = 1, limit = 10)
+                val suggestions = chatRepository.fetchSuggestedConnections()
 
-            chatUiState = ChatUiState.Success(
-                conversations = conversations,
-                suggestions = suggestions
-            )
-        } catch (e: Exception) {
-            chatUiState = ChatUiState.Error(e.message ?: "Unknown error occurred")
+                chatUiState = ChatUiState.Success(
+                    conversations = conversations,
+                    suggestions = suggestions
+                )
+            } catch (e: Exception) {
+                chatUiState = ChatUiState.Error(
+                    e.message ?: "Unknown error occurred while fetching conversations"
+                )
+            }
         }
     }
 
@@ -78,27 +95,95 @@ class ChatViewModel : ViewModel() {
 
     /**
      * Handles connection action for suggested users.
+     * 
+     * TODO: Implement API call to:
+     * - Create interaction record (LIKE)
+     * - Check for mutual like to create match
      */
     fun connectWithUser(user: ChatUser) {
-        // TODO: Implement connect action with API call
-        // - Create interaction record (LIKE)
-        // - Check for mutual like to create match
+        viewModelScope.launch {
+            try {
+                // TODO: Implement interaction API call
+                // POST /api/interactions with user_id
+            } catch (e: Exception) {
+                chatUiState = ChatUiState.Error("Failed to connect with user: ${e.message}")
+            }
+        }
     }
 
     /**
      * Opens or switches to a specific conversation.
      */
     fun selectConversation(conversation: Conversation) {
-        // TODO: Implement conversation selection and navigation
+        // Navigation handled by UI layer
     }
 
     /**
      * Sends a message in the current conversation.
+     * 
+     * API Call: POST /api/matches/{matchId}/messages
      */
     fun sendMessage(matchId: Int, content: String) {
-        // TODO: Implement message sending with API call
-        // - Insert into messages table
-        // - Update match timestamps
-        // - Handle real-time updates
+        viewModelScope.launch {
+            try {
+                val sentMessage = chatRepository.sendMessage(matchId, content)
+                
+                // Update UI state with new message
+                if (chatUiState is ChatUiState.Success) {
+                    val currentState = chatUiState as ChatUiState.Success
+                    val updatedConversations = currentState.conversations.map { conversation ->
+                        if (conversation.matchId == matchId) {
+                            conversation.copy(
+                                messages = conversation.messages + sentMessage,
+                                lastMessage = content,
+                                lastMessageTime = sentMessage.sentAt.toString()
+                            )
+                        } else {
+                            conversation
+                        }
+                    }
+                    chatUiState = ChatUiState.Success(
+                        conversations = updatedConversations,
+                        suggestions = currentState.suggestions
+                    )
+                }
+            } catch (e: Exception) {
+                chatUiState = ChatUiState.Error("Failed to send message: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Unmatch a specific match.
+     * 
+     * API Call: DELETE /api/matches/{matchId}
+     */
+    fun unMatch(matchId: Int) {
+        viewModelScope.launch {
+            try {
+                chatRepository.deleteMatch(matchId)
+                
+                // Remove match from UI state
+                if (chatUiState is ChatUiState.Success) {
+                    val currentState = chatUiState as ChatUiState.Success
+                    val updatedConversations = currentState.conversations.filter { 
+                        it.matchId != matchId 
+                    }
+                    chatUiState = ChatUiState.Success(
+                        conversations = updatedConversations,
+                        suggestions = currentState.suggestions
+                    )
+                }
+            } catch (e: Exception) {
+                chatUiState = ChatUiState.Error("Failed to unmatch: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Refresh conversations from API.
+     */
+    fun refreshConversations() {
+        loadChatData()
     }
 }
