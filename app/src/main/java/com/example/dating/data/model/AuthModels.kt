@@ -96,6 +96,33 @@ data class RegisterResponseData(
     val token: String
 )
 
+// ============== USER PREFERENCES ==============
+
+/**
+ * Request data class for updating user preferences.
+ */
+@Serializable
+data class UserPreferencesRequest(
+    @SerialName("target_gender")
+    val targetGender: String?,
+    @SerialName("min_age")
+    val minAge: Int,
+    @SerialName("max_age")
+    val maxAge: Int,
+    @SerialName("max_distance_km")
+    val maxDistanceKm: Int,
+    @SerialName("anonymous_interests")
+    val anonymousInterests: List<String>
+)
+
+/**
+ * Response data class for user preferences operations.
+ */
+@Serializable
+data class UserPreferencesResponse(
+    val message: String = ""
+)
+
 // ============== REFRESH TOKEN ==============
 
 /**

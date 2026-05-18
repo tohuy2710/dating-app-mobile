@@ -23,6 +23,8 @@ import com.example.dating.data.model.LoginResponseData
 import com.example.dating.data.model.RegisterRequest
 import com.example.dating.data.model.RegisterResponseData
 import com.example.dating.data.model.User
+import com.example.dating.data.model.UserPreferencesRequest
+import com.example.dating.data.model.UserPreferencesResponse
 import com.example.dating.data.remote.AuthApiService
 import retrofit2.HttpException
 
@@ -32,13 +34,6 @@ import retrofit2.HttpException
 interface AuthRepository {
     /**
      * Performs registration with email, password, and user profile information.
-     * @param email User email address
-     * @param password User password (minimum 6 characters)
-     * @param fullName User's full name
-     * @param birthDate User's birth date (YYYY-MM-DD format, optional)
-     * @param gender User's gender (M, F, O, optional)
-     * @param bio User biography (optional)
-     * @return RegisterResponseData with user data and token
      */
     suspend fun register(
         email: String,
@@ -51,9 +46,6 @@ interface AuthRepository {
 
     /**
      * Performs login with email and password.
-     * @param email User email
-     * @param password User password
-     * @return LoginResponseData with user data and token
      */
     suspend fun login(email: String, password: String): LoginResponseData
 
@@ -63,23 +55,28 @@ interface AuthRepository {
     suspend fun getMe(): User
 
     /**
+     * Updates user preferences on the backend.
+     */
+    suspend fun saveUserPreferences(
+        targetGender: String?,
+        minAge: Int,
+        maxAge: Int,
+        maxDistanceKm: Int,
+        anonymousInterests: List<String>
+    ): UserPreferencesResponse
+
+    /**
      * Refreshes the authentication token using the current token.
-     * @param token The current authentication token
-     * @return New token
      */
     suspend fun refreshToken(token: String): String
 
     /**
      * Saves the login token to local database.
-     * @param token The token to save
-     * @param tokenType The type of token (e.g., "Bearer")
-     * @param expiresAt When the token expires
      */
     suspend fun saveToken(token: String, tokenType: String, expiresAt: String)
 
     /**
      * Retrieves the latest saved token from local database.
-     * @return TokenEntity or null if no token exists
      */
     suspend fun getLatestToken(): TokenEntity?
 
@@ -143,6 +140,28 @@ class NetworkAuthRepository(
             }
             throw e
         }
+    }
+
+    override suspend fun saveUserPreferences(
+        targetGender: String?,
+        minAge: Int,
+        maxAge: Int,
+        maxDistanceKm: Int,
+        anonymousInterests: List<String>
+    ): UserPreferencesResponse {
+        val tokenEntity = tokenDao.getLatestToken() ?: throw IllegalStateException("User is not authenticated")
+        val request = UserPreferencesRequest(
+            targetGender = targetGender,
+            minAge = minAge,
+            maxAge = maxAge,
+            maxDistanceKm = maxDistanceKm,
+            anonymousInterests = anonymousInterests
+        )
+        val response = authApiService.updatePreferences(buildAuthorizationHeader(tokenEntity), request)
+        if (!response.success) {
+            throw Exception(response.message)
+        }
+        return response.data ?: UserPreferencesResponse(message = response.message)
     }
 
     override suspend fun refreshToken(token: String): String {

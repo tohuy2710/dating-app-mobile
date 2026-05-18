@@ -28,10 +28,16 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.dating.DatingApplication
 import com.example.dating.data.model.LoginResponseData
 import com.example.dating.data.model.RegisterResponseData
+import com.example.dating.data.model.UserPreferencesResponse
 import com.example.dating.data.repository.AuthRepository
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import retrofit2.HttpException
 import java.io.IOException
+import java.util.Base64
 
 /**
  * UI state for the Login screen
@@ -51,6 +57,16 @@ sealed interface RegisterUiState {
     object Loading : RegisterUiState
     data class Success(val response: RegisterResponseData) : RegisterUiState
     data class Error(val message: String) : RegisterUiState
+}
+
+/**
+ * UI state for the Preferences screen
+ */
+sealed interface PreferencesUiState {
+    object Idle : PreferencesUiState
+    object Loading : PreferencesUiState
+    data class Success(val response: UserPreferencesResponse) : PreferencesUiState
+    data class Error(val message: String) : PreferencesUiState
 }
 
 /**
@@ -108,6 +124,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     var registerBio: String by mutableStateOf("")
         private set
 
+    // ============== PREFERENCES STATE ==============
+
+    var preferencesUiState: PreferencesUiState by mutableStateOf(PreferencesUiState.Idle)
+        private set
+
     var selectedInterests: List<String> by mutableStateOf(emptyList())
         private set
 
@@ -144,6 +165,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     fun updateRegisterBio(newBio: String) {
+        // Bio can be null or empty
         registerBio = newBio
     }
 
@@ -169,13 +191,18 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
      */
     fun checkAuthStatus(onFinished: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val token = authRepository.getLatestToken()
-            if (token != null) {
-                // Here you might want to verify the token with the server
-                // For now, we assume if it exists, it's valid or we'll handle 401 later
-                onFinished(true)
-            } else {
+            // Reuse a saved token when it is still valid.
+            val tokenEntity = authRepository.getLatestToken()
+            if (tokenEntity == null) {
                 onFinished(false)
+                return@launch
+            }
+
+            if (isTokenExpired(tokenEntity.token)) {
+                authRepository.clearTokens()
+                onFinished(false)
+            } else {
+                onFinished(true)
             }
         }
     }
@@ -242,7 +269,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 // Save token to local database
                 authRepository.saveToken(result.token, "Bearer", result.token)
                 
-                // Clear sensitive data for security
                 registerPassword = ""
                 RegisterUiState.Success(result)
             } catch (e: IOException) {
@@ -251,6 +277,35 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 RegisterUiState.Error("Registration failed. Please check your information.")
             } catch (e: Exception) {
                 RegisterUiState.Error("An unexpected error occurred: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Submits the user preferences to the backend.
+     */
+    fun submitPreferences() {
+        viewModelScope.launch {
+            preferencesUiState = PreferencesUiState.Loading
+            preferencesUiState = try {
+                val response = authRepository.saveUserPreferences(
+                    targetGender = when (targetGenderPreference) {
+                        "Nam" -> "male"
+                        "Nữ" -> "female"
+                        else -> "both"
+                    },
+                    minAge = minAgePreference.toIntOrNull() ?: 18,
+                    maxAge = maxAgePreference.toIntOrNull() ?: 99,
+                    maxDistanceKm = maxDistancePreference.toIntOrNull() ?: 50,
+                    anonymousInterests = selectedInterests
+                )
+                PreferencesUiState.Success(response)
+            } catch (e: IOException) {
+                PreferencesUiState.Error("Network error. Please check your connection.")
+            } catch (e: HttpException) {
+                PreferencesUiState.Error("Failed to save preferences. Please try again.")
+            } catch (e: Exception) {
+                PreferencesUiState.Error("An unexpected error occurred: ${e.message}")
             }
         }
     }
@@ -288,6 +343,13 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     /**
+     * Resets the preferences state to Idle
+     */
+    fun resetPreferencesState() {
+        preferencesUiState = PreferencesUiState.Idle
+    }
+
+    /**
      * Logs out the user by clearing tokens and resetting state
      */
     fun logout() {
@@ -308,6 +370,25 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             maxDistancePreference = ""
             loginUiState = LoginUiState.Idle
             registerUiState = RegisterUiState.Idle
+            preferencesUiState = PreferencesUiState.Idle
+        }
+    }
+
+    private fun isTokenExpired(token: String): Boolean {
+        val rawToken = token.removePrefix("Bearer ").trim()
+        val payload = rawToken.split(".").getOrNull(1) ?: return false
+        return try {
+            val decodedPayload = String(Base64.getUrlDecoder().decode(payload), Charsets.UTF_8)
+            val expiresAtSeconds = Json.parseToJsonElement(decodedPayload)
+                .jsonObject["exp"]
+                ?.jsonPrimitive
+                ?.longOrNull
+                ?: return false
+
+            val nowSeconds = System.currentTimeMillis() / 1000
+            expiresAtSeconds <= nowSeconds
+        } catch (e: Exception) {
+            false
         }
     }
 

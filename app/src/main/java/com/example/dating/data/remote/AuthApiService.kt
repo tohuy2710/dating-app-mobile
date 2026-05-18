@@ -23,6 +23,8 @@ import com.example.dating.data.model.RegisterRequest
 import com.example.dating.data.model.RegisterResponseData
 import com.example.dating.data.model.RefreshTokenResponseData
 import com.example.dating.data.model.User
+import com.example.dating.data.model.UserPreferencesRequest
+import com.example.dating.data.model.UserPreferencesResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -56,6 +58,17 @@ interface AuthApiService {
     suspend fun getMe(
         @Header("Authorization") authHeader: String
     ): ApiResponse<User>
+
+    /**
+     * Update user preferences
+     * POST /api/users/preferences
+     * Requires: Authorization header with Bearer token
+     */
+    @POST("users/preferences")
+    suspend fun updatePreferences(
+        @Header("Authorization") authHeader: String,
+        @Body request: UserPreferencesRequest
+    ): ApiResponse<UserPreferencesResponse>
 
     /**
      * Refresh authentication token

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,8 +43,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.dating.ui.auth.PreferencesUiState
 import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
@@ -52,6 +55,7 @@ import com.example.dating.ui.theme.Gray700
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PreferencesScreen(
+    preferencesUiState: PreferencesUiState,
     onComplete: (selectedInterests: List<String>, targetGender: String?, minAge: String, maxAge: String, maxDistance: String) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -223,6 +227,26 @@ fun PreferencesScreen(
 
         Spacer(modifier = Modifier.height(48.dp))
 
+        when (val state = preferencesUiState) {
+            is PreferencesUiState.Loading -> {
+                CircularProgressIndicator(color = BrandPink)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            is PreferencesUiState.Error -> {
+                Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            else -> Unit
+        }
+
         Button(
             onClick = {
                 onComplete(selectedInterests.toList(), targetGender, minAge, maxAge, maxDistance)
@@ -232,7 +256,8 @@ fun PreferencesScreen(
                 .height(68.dp),
             shape = RoundedCornerShape(34.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+            enabled = preferencesUiState !is PreferencesUiState.Loading
         ) {
             Box(
                 modifier = Modifier

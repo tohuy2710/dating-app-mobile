@@ -344,7 +344,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 RegisterButton(
                     onClick = { authViewModel.register() },
-                    text = "Đăng ký",
+                    text = "Tiếp theo",
                     enabled = true
                 )
             }
@@ -352,7 +352,7 @@ fun RegisterScreen(
             else -> {
                 RegisterButton(
                     onClick = { authViewModel.register() },
-                    text = "Đăng ký",
+                    text = "Tiếp theo",
                     enabled = authViewModel.registerUiState !is RegisterUiState.Loading
                 )
             }
@@ -387,7 +387,7 @@ private fun RegisterField(
 @Composable
 private fun RegisterButton(
     onClick: () -> Unit,
-    text: String = "Đăng ký",
+    text: String = "Tiếp theo",
     enabled: Boolean = true
 ) {
     Button(

@@ -1,6 +1,7 @@
 package com.example.dating.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -10,6 +11,7 @@ import com.example.dating.ui.auth.LoginScreen
 import com.example.dating.ui.auth.RegisterScreen
 import com.example.dating.ui.preferences.PreferencesScreen
 import com.example.dating.ui.auth.AuthViewModel
+import com.example.dating.ui.auth.PreferencesUiState
 
 @Composable
 fun AuthNavHost(
@@ -51,7 +53,23 @@ fun AuthNavHost(
         }
 
         composable(Screen.Preferences.route) {
+            LaunchedEffect(authViewModel.preferencesUiState) {
+                if (authViewModel.preferencesUiState is PreferencesUiState.Success) {
+                    // Pre-fill login credentials with registered account
+                    authViewModel.prefillLoginCredentials(
+                        authViewModel.registerEmail,
+                        authViewModel.registerPassword
+                    )
+                    authViewModel.resetPreferencesState()
+                    // Navigate back to login screen after preferences are completed
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
+                }
+            }
+
             PreferencesScreen(
+                preferencesUiState = authViewModel.preferencesUiState,
                 onComplete = { selectedInterests, targetGender, minAge, maxAge, maxDistance ->
                     authViewModel.savePreferences(
                         interests = selectedInterests,
@@ -60,15 +78,7 @@ fun AuthNavHost(
                         maxAge = maxAge,
                         maxDistance = maxDistance
                     )
-                    // Pre-fill login credentials with registered account
-                    authViewModel.prefillLoginCredentials(
-                        authViewModel.registerEmail,
-                        authViewModel.registerPassword
-                    )
-                    // Navigate back to login screen after preferences are completed
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Register.route) { inclusive = true }
-                    }
+                    authViewModel.submitPreferences()
                 },
                 onBackClick = {
                     navController.popBackStack()
