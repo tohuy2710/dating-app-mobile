@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.DarkSecondaryText
@@ -27,7 +28,7 @@ import com.example.dating.ui.theme.BorderGray
 
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel = ChatViewModel(),
+    viewModel: ChatViewModel = viewModel(),
     modifier: Modifier = Modifier,
     onConversationSelected: (Conversation) -> Unit = {}
 ) {

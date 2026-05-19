@@ -19,6 +19,7 @@ package com.example.dating
 import android.app.Application
 import com.example.dating.di.AppContainer
 import com.example.dating.di.DefaultAppContainer
+import com.example.dating.core.messaging.NotificationHelper
 
 /**
  * Main Application class
@@ -29,6 +30,7 @@ class DatingApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        NotificationHelper.createNotificationChannel(this)
         container = DefaultAppContainer(this)
     }
 }
