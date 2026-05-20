@@ -30,10 +30,13 @@ class DatingFirebaseMessagingService : FirebaseMessagingService() {
                 ?: message.data["body"]
                 ?: ""
 
+        val matchId = message.data["match_id"]
+
         NotificationHelper.showNotification(
             applicationContext,
             title,
-            body
+            body,
+            matchId
         )
     }
 }

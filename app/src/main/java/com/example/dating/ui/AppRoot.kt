@@ -10,7 +10,8 @@ import com.example.dating.ui.navigation.AppNavHost
 
 @Composable
 fun AppRoot(
-    authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+    authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory),
+    initialMatchId: Int? = null
 ) {
     var isLoggedIn by remember { mutableStateOf<Boolean?>(null) }
     var userId by remember { mutableStateOf<Int?>(null) }
@@ -52,7 +53,8 @@ fun AppRoot(
         )
     } else {
         AppNavHost(
-            navController = mainNavController
+            navController = mainNavController,
+            initialMatchId = initialMatchId
         )
     }
 }

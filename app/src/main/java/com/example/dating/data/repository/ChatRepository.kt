@@ -6,6 +6,7 @@ import com.example.dating.ui.chat.Conversation
 import com.example.dating.ui.chat.MatchWithUsers
 import com.example.dating.ui.chat.Message
 import com.example.dating.ui.chat.SuggestedConnection
+import com.example.dating.ui.chat.ChatUser
 
 class ChatRepository(
     private val matchesApiService: MatchesApiService
@@ -56,32 +57,6 @@ class ChatRepository(
         }
     }
 
-    suspend fun fetchMatchMessages(
-        matchId: Int,
-        page: Int = 1,
-        limit: Int = 50
-    ): List<Message> {
-
-        return try {
-
-            val response =
-                matchesApiService.getMatchDetail(
-                    matchId,
-                    page,
-                    limit
-                )
-
-            response.data.messages
-
-        } catch (e: Exception) {
-
-            throw Exception(
-                "Failed to fetch messages for match $matchId: ${e.message}",
-                e
-            )
-        }
-    }
-
     suspend fun fetchConversationDetail(
         conversation: Conversation,
         messagesPage: Int = 1,
@@ -108,6 +83,54 @@ class ChatRepository(
 
             throw Exception(
                 "Failed to fetch conversation detail for match ${conversation.matchId}: ${e.message}",
+                e
+            )
+        }
+    }
+
+    suspend fun fetchConversationFromMatchDetail(
+        matchId: Int,
+        currentUserId: Int = MAIN_USER_ID,
+        messagesPage: Int = 1,
+        messagesLimit: Int = 50
+    ): Conversation {
+
+        return try {
+
+            val response =
+                matchesApiService.getMatchDetail(
+                    matchId,
+                    messagesPage,
+                    messagesLimit
+                )
+
+            val data = response.data
+
+            // Determine other user (not the current user)
+            val otherUser = if (data.user1 != null && data.user1.userId == currentUserId) {
+                data.user2 ?: data.user1
+            } else {
+                data.user1 ?: data.user2 ?: ChatUser(0, "Unknown")
+            }
+
+            val lastMessage = data.lastMessage?.content ?: data.messages.lastOrNull()?.content ?: "Start chatting!"
+            val lastMessageTime = data.lastMessage?.sentAt ?: data.messages.lastOrNull()?.sentAt ?: ""
+
+            Conversation(
+                matchId = matchId,
+                user = otherUser,
+                lastMessage = lastMessage,
+                lastMessageTime = lastMessageTime,
+                unreadCount = data.unreadCount,
+                isTyping = false,
+                messages = data.messages,
+                matchMode = data.matchMode
+            )
+
+        } catch (e: Exception) {
+
+            throw Exception(
+                "Failed to fetch conversation detail for match $matchId: ${e.message}",
                 e
             )
         }

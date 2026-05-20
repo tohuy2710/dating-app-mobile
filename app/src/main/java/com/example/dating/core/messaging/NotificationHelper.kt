@@ -39,14 +39,20 @@ object NotificationHelper {
     fun showNotification(
         context: Context,
         title: String,
-        body: String
+        body: String,
+        matchId: String? = null
     ) {
 
         val intent = Intent(context, MainActivity::class.java)
 
         intent.flags =
-            Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+        if (!matchId.isNullOrEmpty()) {
+            intent.putExtra("match_id", matchId)
+            intent.putExtra("from_notification", true)
+        }
 
         val pendingIntent = PendingIntent.getActivity(
             context,

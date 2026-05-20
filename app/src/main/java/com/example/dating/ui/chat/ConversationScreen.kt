@@ -75,6 +75,7 @@ import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.Gray300
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.net.URLDecoder
 
 /**
  * Composable for a single message bubble in the conversation.
@@ -199,7 +200,7 @@ fun ConversationHeader(
             }
 
             Text(
-                text = user.fullName,
+                text = URLDecoder.decode(user.fullName, "UTF-8"),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = DarkText,
@@ -321,7 +322,6 @@ fun MessageInputField(
 @Composable
 fun ConversationScreen(
     matchId: Int,
-    conversationJson: String? = null,
     onBackClick: () -> Unit,
     onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,

@@ -40,12 +40,18 @@ class MainActivity : ComponentActivity() {
                 1001
             )
         }
+
+        val matchId = intent?.getStringExtra("match_id")?.toIntOrNull()
+        val fromNotification = intent?.getBooleanExtra("from_notification", false) ?: false
+
         setContent {
             MarsPhotosTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    AppRoot()
+                    AppRoot(
+                        initialMatchId = if (fromNotification) matchId else null
+                    )
                 }
             }
         }

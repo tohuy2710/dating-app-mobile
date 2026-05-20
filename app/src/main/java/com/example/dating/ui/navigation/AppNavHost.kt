@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,20 +16,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import com.example.dating.ui.chat.*
-import com.example.dating.ui.profile.*
+import com.example.dating.ui.chat.ChatOptionsScreen
+import com.example.dating.ui.chat.ChatScreen
+import com.example.dating.ui.chat.ConversationScreen
+import com.example.dating.ui.profile.ProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialMatchId: Int? = null
 ) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+
+    val currentRoute =
+        navBackStackEntry?.destination?.route
 
     val hideBottomBar =
         currentRoute?.startsWith("conversation") == true ||
@@ -37,8 +41,17 @@ fun AppNavHost(
                 currentRoute == Screen.Settings.route ||
                 currentRoute == Screen.EditInterests.route
 
+    LaunchedEffect(initialMatchId) {
+        if (initialMatchId != null) {
+            navController.navigate(
+                Screen.Conversation.createRoute(initialMatchId)
+            )
+        }
+    }
+
     Scaffold(
         bottomBar = {
+
             if (!hideBottomBar) {
                 BottomBar(navController)
             }
@@ -52,34 +65,37 @@ fun AppNavHost(
         ) {
 
             composable(Screen.Traditional.route) {
+
                 TraditionalMatchingHomeScreen(
                     onMatchNowClick = {
-                        navController.navigate(Screen.MatchProfile.route)
+                        navController.navigate(
+                            Screen.MatchProfile.route
+                        )
                     }
                 )
             }
 
             composable(Screen.Anonymous.route) {
+
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Anonymous matching coming soon")
+
+                    Text(
+                        text = "Anonymous matching coming soon"
+                    )
                 }
             }
 
             composable(Screen.Chat.route) {
+
                 ChatScreen(
                     onConversationSelected = { conversation ->
-                        val conversationJson = try {
-                            Json.encodeToString(conversation)
-                        } catch (e: Exception) {
-                            ""
-                        }
+
                         navController.navigate(
                             Screen.Conversation.createRoute(
-                                conversation.matchId,
-                                conversationJson
+                                conversation.matchId
                             )
                         )
                     }
@@ -87,6 +103,7 @@ fun AppNavHost(
             }
 
             composable(Screen.MatchProfile.route) {
+
                 ProfileScreen(
                     onBackClick = {
                         navController.popBackStack()
@@ -94,41 +111,31 @@ fun AppNavHost(
                 )
             }
 
-//            composable(Screen.Settings.route) {
-//                SettingsScreen(onBackClick = { navController.popBackStack() })
-//            }
-//
-//            composable(Screen.EditInterests.route) {
-//                InterestsSelectionScreen(onBackClick = { navController.popBackStack() })
-//            }
-
             composable(
                 route = Screen.Conversation.route,
                 arguments = listOf(
-                    navArgument("matchId") { type = NavType.IntType },
-                    navArgument("conversation") { type = NavType.StringType }
+                    navArgument("matchId") {
+                        type = NavType.IntType
+                    }
                 )
             ) { backStackEntry ->
 
-                val matchId = backStackEntry.arguments?.getInt("matchId")
-                val conversationJson = backStackEntry.arguments?.getString("conversation")?.let {
-                    try {
-                        java.net.URLDecoder.decode(it, "UTF-8")
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
+                val matchId =
+                    backStackEntry.arguments?.getInt("matchId")
 
-                if (matchId != null && conversationJson != null) {
+                if (matchId != null) {
+
                     ConversationScreen(
                         matchId = matchId,
-                        conversationJson = conversationJson,
                         onBackClick = {
                             navController.popBackStack()
                         },
                         onAvatarClick = {
+
                             navController.navigate(
-                                Screen.ChatOptions.createRoute(matchId)
+                                Screen.ChatOptions.createRoute(
+                                    matchId
+                                )
                             )
                         }
                     )
@@ -138,13 +145,17 @@ fun AppNavHost(
             composable(
                 route = Screen.ChatOptions.route,
                 arguments = listOf(
-                    navArgument("matchId") { type = NavType.IntType }
+                    navArgument("matchId") {
+                        type = NavType.IntType
+                    }
                 )
             ) { backStackEntry ->
 
-                val matchId = backStackEntry.arguments?.getInt("matchId")
+                val matchId =
+                    backStackEntry.arguments?.getInt("matchId")
 
                 if (matchId != null) {
+
                     ChatOptionsScreen(
                         matchId = matchId,
                         onBackClick = {
@@ -153,13 +164,6 @@ fun AppNavHost(
                     )
                 }
             }
-
-//            composable(Screen.Profile.route) {
-//                UserProfileScreen(
-//                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
-//                    onEditInterestsClick = { navController.navigate(Screen.EditInterests.route) }
-//                )
-//            }
         }
     }
 }

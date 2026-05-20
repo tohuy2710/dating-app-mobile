@@ -22,10 +22,11 @@ sealed class Screen(val route: String) {
 
     object EditInterests : Screen("edit_interests")
 
-    object Conversation : Screen("conversation/{matchId}/{conversation}") {
+    object Conversation : Screen("conversation/{matchId}") {
 
-        fun createRoute(matchId: Int, conversationJson: String) =
-            "conversation/$matchId/${java.net.URLEncoder.encode(conversationJson, "UTF-8")}"
+        fun createRoute(matchId: Int): String {
+            return "conversation/$matchId"
+        }
     }
 
     object ChatOptions : Screen("chat_options/{matchId}") {

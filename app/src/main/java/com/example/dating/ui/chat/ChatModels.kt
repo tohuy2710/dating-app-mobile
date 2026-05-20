@@ -182,11 +182,42 @@ data class MatchWithUsers(
 
 @Serializable
 data class MatchDetailResponseData(
-    val match: Match,
+
+    @SerialName("match_id")
+    val matchId: Int,
+
+    @SerialName("user1_id")
+    val user1Id: Int,
+
+    @SerialName("user2_id")
+    val user2Id: Int,
+
+    @SerialName("match_mode")
+    val matchMode: String = "traditional",
+
+    @SerialName("matched_at")
+    val matchedAt: String,
+
+    @SerialName("is_active")
+    val isActive: Boolean = true,
+
+    val user1: ChatUser,
+
+    val user2: ChatUser,
+
     val messages: List<Message> = emptyList(),
 
     @SerialName("messagesPagination")
-    val messagesPagination: PaginationInfo = PaginationInfo()
+    val messagesPagination: PaginationInfo = PaginationInfo(),
+
+    @SerialName("unreadMessages")
+    val unreadMessages: List<Message> = emptyList(),
+
+    @SerialName("unreadCount")
+    val unreadCount: Int = 0,
+
+    @SerialName("lastMessage")
+    val lastMessage: Message? = null
 )
 
 sealed class ChatUiState {

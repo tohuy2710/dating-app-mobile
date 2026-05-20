@@ -26,9 +26,6 @@ import com.example.dating.core.network.RetrofitClient
 import com.example.dating.data.remote.MatchesApiService
 import com.example.dating.data.repository.ChatRepository
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 
 class ConversationViewModel(
     savedStateHandle: SavedStateHandle
@@ -37,114 +34,170 @@ class ConversationViewModel(
     private val matchesApiService: MatchesApiService by lazy {
         RetrofitClient.retrofitInstance.create(MatchesApiService::class.java)
     }
-    
+
     private val chatRepository: ChatRepository by lazy {
         ChatRepository(matchesApiService)
     }
-    
-    // Extract matchId and conversation from navigation arguments
-    val matchId: Int? = savedStateHandle["matchId"]
-    private val conversationJson: String? = savedStateHandle["conversation"]
-    private val initialConversation: Conversation? = conversationJson?.let {
-        try {
-            Json.decodeFromString<Conversation>(it)
-        } catch (e: Exception) {
-            null
-        }
-    }
 
-    var conversationUiState: ConversationUiState by mutableStateOf(ConversationUiState.Idle)
+    /**
+     * Get matchId directly from navigation arguments.
+     *
+     * Route:
+     * conversation/{matchId}
+     */
+    private val matchId: Int? = savedStateHandle["matchId"]
+
+    var conversationUiState: ConversationUiState by mutableStateOf(
+        ConversationUiState.Idle
+    )
         private set
 
     init {
-        if (matchId != null && initialConversation != null) {
+        if (matchId != null) {
             loadConversationDetail()
+        } else {
+            conversationUiState =
+                ConversationUiState.Error(
+                    "Invalid match id"
+                )
         }
     }
 
     /**
-     * Load conversation details (match + fresh messages) from API.
-     * 
-     * Uses pre-loaded conversation from getMatches response and fetches fresh messages from getMatchDetail.
-     * API Call: GET /api/matches/{matchId}?page=1&limit=50
+     * Fetch conversation detail directly from API.
+     *
+     * API:
+     * GET /api/matches/{matchId}
      */
     private fun loadConversationDetail() {
-        conversationUiState = ConversationUiState.Loading
+
+        conversationUiState =
+            ConversationUiState.Loading
 
         viewModelScope.launch {
             try {
-                val conversation = initialConversation ?: return@launch
-                val updatedConversation = chatRepository.fetchConversationDetail(
-                    conversation = conversation,
-                    messagesPage = 1,
-                    messagesLimit = 50
-                )
-                conversationUiState = ConversationUiState.Success(updatedConversation)
+
+                val id = matchId ?: return@launch
+
+                val conversation =
+                    chatRepository.fetchConversationFromMatchDetail(
+                        matchId = id,
+                        messagesPage = 1,
+                        messagesLimit = 50
+                    )
+
+                conversationUiState =
+                    ConversationUiState.Success(conversation)
+
             } catch (e: Exception) {
-                conversationUiState = ConversationUiState.Error(
-                    e.message ?: "Failed to load conversation"
-                )
+
+                conversationUiState =
+                    ConversationUiState.Error(
+                        e.message
+                            ?: "Failed to load conversation"
+                    )
             }
         }
     }
 
     /**
-     * Send a message in the conversation.
-     * 
-     * API Call: POST /api/matches/{matchId}/messages
+     * Send message.
+     *
+     * API:
+     * POST /api/matches/{matchId}/messages
      */
     fun sendMessage(content: String) {
+
+        if (content.isBlank()) return
+
         viewModelScope.launch {
+
             try {
-                val message = chatRepository.sendMessage(matchId ?: return@launch, content)
-                
-                // Update UI state with new message
-                if (conversationUiState is ConversationUiState.Success) {
-                    val currentState = conversationUiState as ConversationUiState.Success
-                    val updatedConversation = currentState.conversation.copy(
-                        messages = currentState.conversation.messages + message,
-                        lastMessage = content,
-                        lastMessageTime = message.sentAt
+
+                val id = matchId ?: return@launch
+
+                val message =
+                    chatRepository.sendMessage(
+                        matchId = id,
+                        content = content
                     )
-                    conversationUiState = ConversationUiState.Success(updatedConversation)
+
+                val currentState = conversationUiState
+
+                if (currentState is ConversationUiState.Success) {
+
+                    val updatedConversation =
+                        currentState.conversation.copy(
+
+                            messages =
+                                currentState.conversation.messages + message,
+
+                            lastMessage = message.content,
+
+                            lastMessageTime = message.sentAt
+                        )
+
+                    conversationUiState =
+                        ConversationUiState.Success(
+                            updatedConversation
+                        )
                 }
+
             } catch (e: Exception) {
-                conversationUiState = ConversationUiState.Error(
-                    "Failed to send message: ${e.message}"
-                )
+
+                conversationUiState =
+                    ConversationUiState.Error(
+                        "Failed to send message: ${e.message}"
+                    )
             }
         }
     }
 
     /**
-     * Refresh conversation from API.
+     * Refresh conversation.
      */
     fun refreshConversation() {
         loadConversationDetail()
     }
-    
+
     /**
-     * Delete/Unmatch the conversation.
+     * Delete / Unmatch conversation.
      */
-    fun deleteMatch(matchId: Int) {
+    fun deleteMatch() {
+
         viewModelScope.launch {
+
             try {
-                chatRepository.deleteMatch(matchId)
+
+                val id = matchId ?: return@launch
+
+                chatRepository.deleteMatch(id)
+
             } catch (e: Exception) {
-                conversationUiState = ConversationUiState.Error(
-                    "Failed to delete match: ${e.message}"
-                )
+
+                conversationUiState =
+                    ConversationUiState.Error(
+                        "Failed to delete match: ${e.message}"
+                    )
             }
         }
     }
 }
 
 /**
- * UI State for conversation screen.
+ * UI state for ConversationScreen.
  */
 sealed class ConversationUiState {
+
     data object Idle : ConversationUiState()
+
     data object Loading : ConversationUiState()
-    data class Success(val conversation: Conversation) : ConversationUiState()
-    data class Error(val message: String) : ConversationUiState()
+
+    data class Success(
+        val conversation: Conversation
+    ) : ConversationUiState()
+
+    data class Error(
+        val message: String
+    ) : ConversationUiState()
 }

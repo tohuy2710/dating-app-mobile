@@ -60,7 +60,7 @@ fun ChatOptionsScreen(
                     onBackClick()
                 },
                 onUnmatchClick = {
-                    viewModel.deleteMatch(matchId)
+                    viewModel.deleteMatch()
                     onBackClick()
                 },
                 modifier = modifier
