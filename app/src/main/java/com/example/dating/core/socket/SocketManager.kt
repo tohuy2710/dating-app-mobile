@@ -9,10 +9,13 @@ import com.example.dating.core.config.AppConfig
 object SocketManager {
 
     private var socket: Socket? = null
+    private var isConnected = false
+
 
     fun connect(
         userId: Int
     ) {
+        if (isConnected) return
 
         try {
 
@@ -30,6 +33,7 @@ object SocketManager {
                     "authenticate",
                     userId
                 )
+                isConnected = true
             }
 
             socket?.on("new_message") { args ->
@@ -50,6 +54,7 @@ object SocketManager {
 
     fun disconnect() {
         socket?.disconnect()
+        isConnected = false
     }
 
     fun sendMessage(

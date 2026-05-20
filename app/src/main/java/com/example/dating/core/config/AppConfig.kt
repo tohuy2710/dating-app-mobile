@@ -26,10 +26,10 @@ package com.example.dating.core.config
  */
 object AppConfig {
     // API Configuration
-    const val API_BASE_URL = "http://localhost:5000/"
+//    const val API_BASE_URL = "http://localhost:5000/"
     
     // For Android Emulator, use:
-    // const val API_BASE_URL = "http://10.0.2.2:5000/"
+     const val API_BASE_URL = "http://10.0.2.2:5000/"
     
     // For physical device on same network, use your machine IP:
     // const val API_BASE_URL = "http://192.168.x.x:5000/"
