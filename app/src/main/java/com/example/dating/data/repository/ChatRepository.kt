@@ -7,6 +7,7 @@ import com.example.dating.ui.chat.MatchWithUsers
 import com.example.dating.ui.chat.Message
 import com.example.dating.ui.chat.SuggestedConnection
 import com.example.dating.ui.chat.ChatUser
+import com.example.dating.ui.chat.MatchDetailResponseData
 
 class ChatRepository(
     private val matchesApiService: MatchesApiService
@@ -73,10 +74,11 @@ class ChatRepository(
                 )
 
             // Use pre-loaded match detail from getMatches, only update messages from getMatchDetail
+            val sortedMessages = response.data.messages.sortedBy { it.sentAt }
             conversation.copy(
-                messages = response.data.messages,
-                lastMessage = response.data.messages.lastOrNull()?.content ?: conversation.lastMessage,
-                lastMessageTime = response.data.messages.lastOrNull()?.sentAt ?: conversation.lastMessageTime
+                messages = sortedMessages,
+                lastMessage = sortedMessages.lastOrNull()?.content ?: conversation.lastMessage,
+                lastMessageTime = sortedMessages.lastOrNull()?.sentAt ?: conversation.lastMessageTime
             )
 
         } catch (e: Exception) {
@@ -116,6 +118,8 @@ class ChatRepository(
             val lastMessage = data.lastMessage?.content ?: data.messages.lastOrNull()?.content ?: "Start chatting!"
             val lastMessageTime = data.lastMessage?.sentAt ?: data.messages.lastOrNull()?.sentAt ?: ""
 
+            val sortedMessages = data.messages.sortedBy { it.sentAt }
+
             Conversation(
                 matchId = matchId,
                 user = otherUser,
@@ -123,7 +127,7 @@ class ChatRepository(
                 lastMessageTime = lastMessageTime,
                 unreadCount = data.unreadCount,
                 isTyping = false,
-                messages = data.messages,
+                messages = sortedMessages,
                 matchMode = data.matchMode
             )
 
@@ -131,6 +135,36 @@ class ChatRepository(
 
             throw Exception(
                 "Failed to fetch conversation detail for match $matchId: ${e.message}",
+                e
+            )
+        }
+    }
+
+    suspend fun fetchConversationMessagesPage(
+        matchId: Int,
+        messagesPage: Int = 1,
+        messagesLimit: Int = 50
+    ): MatchDetailResponseData {
+
+        return try {
+
+            val response =
+                matchesApiService.getMatchDetail(
+                    matchId,
+                    messagesPage,
+                    messagesLimit
+                )
+
+            val sortedMessages = response.data.messages.sortedBy { it.sentAt }
+
+            response.data.copy(
+                messages = sortedMessages
+            )
+
+        } catch (e: Exception) {
+
+            throw Exception(
+                "Failed to fetch messages for match $matchId: ${e.message}",
                 e
             )
         }

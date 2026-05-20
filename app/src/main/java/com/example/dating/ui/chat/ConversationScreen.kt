@@ -49,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -207,21 +208,6 @@ fun ConversationHeader(
                 modifier = Modifier.weight(1f)
             )
         }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Divider(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(1.dp),
-                color = DarkSecondaryText.copy(alpha = 0.3f)
-            )
-        }
     }
 }
 
@@ -348,6 +334,10 @@ fun ConversationScreen(
                 onSendMessage = { content ->
                     viewModel.sendMessage(content)
                 },
+                onLoadMoreMessages = {
+                    viewModel.loadMoreMessages()
+                },
+                isLoadingMore = viewModel.isLoadingMoreMessages(),
                 modifier = modifier
             )
         }
@@ -392,7 +382,9 @@ private fun ConversationScreenContent(
     onBackClick: () -> Unit,
     onAvatarClick: () -> Unit,
     onSendMessage: (String) -> Unit,
+    onLoadMoreMessages: () -> Unit = {},
     currentUserId: Int = 1,
+    isLoadingMore: Boolean = false,
     modifier: Modifier = Modifier
 ) {
 
@@ -403,6 +395,29 @@ private fun ConversationScreenContent(
     val focusManager = LocalFocusManager.current
 
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Scroll to bottom when new messages arrive or initially loaded
+    LaunchedEffect(conversation.messages.size) {
+        if (conversation.messages.isNotEmpty()) {
+            listState.animateScrollToItem(
+                index = conversation.messages.size - 1,
+                scrollOffset = 0
+            )
+        }
+    }
+
+    // Detect when user scrolls to top to load more messages
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        if (conversation.messages.isNotEmpty() && !isLoadingMore) {
+            val firstVisibleItem = listState.firstVisibleItemIndex
+            val firstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset
+
+            // Trigger load more when user scrolls to first item and scrolls up
+            if (firstVisibleItem == 0 && firstVisibleItemScrollOffset < 100) {
+                onLoadMoreMessages()
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -447,6 +462,24 @@ private fun ConversationScreenContent(
                     message = message,
                     isCurrentUser = message.senderId == currentUserId
                 )
+            }
+
+            // Show loading indicator at the bottom
+            if (isLoadingMore) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Loading more messages...",
+                            color = DarkSecondaryText,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
         }
 

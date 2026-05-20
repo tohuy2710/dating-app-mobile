@@ -52,6 +52,12 @@ class ConversationViewModel(
     )
         private set
 
+    // Pagination tracking
+    private var currentPage: Int = 1
+    private val messagesPerPage: Int = 50
+    private var isLoadingMore: Boolean = false
+    private var hasMoreMessages: Boolean = true
+
     init {
         if (matchId != null) {
             loadConversationDetail()
@@ -182,6 +188,76 @@ class ConversationViewModel(
             }
         }
     }
+
+    /**
+     * Load more messages (older messages when scrolling up).
+     *
+     * API:
+     * GET /api/matches/{matchId}?page={page}
+     */
+    fun loadMoreMessages() {
+
+        if (isLoadingMore || !hasMoreMessages) return
+
+        isLoadingMore = true
+
+        viewModelScope.launch {
+
+            try {
+
+                val id = matchId ?: return@launch
+
+                currentPage++
+
+                val response =
+                    chatRepository.fetchConversationMessagesPage(
+                        matchId = id,
+                        messagesPage = currentPage,
+                        messagesLimit = messagesPerPage
+                    )
+
+                val currentState = conversationUiState
+
+                if (currentState is ConversationUiState.Success) {
+
+                    val newMessages = response.messages
+
+                    if (newMessages.isEmpty()) {
+                        hasMoreMessages = false
+                    } else {
+
+                        // Prepend old messages to maintain chronological order
+                        val updatedConversation =
+                            currentState.conversation.copy(
+                                messages = newMessages + currentState.conversation.messages
+                            )
+
+                        conversationUiState =
+                            ConversationUiState.Success(
+                                updatedConversation
+                            )
+                    }
+                }
+
+            } catch (e: Exception) {
+
+                currentPage-- // Revert if failed
+
+                conversationUiState =
+                    ConversationUiState.Error(
+                        "Failed to load more messages: ${e.message}"
+                    )
+
+            } finally {
+                isLoadingMore = false
+            }
+        }
+    }
+
+    /**
+     * Check if currently loading more messages.
+     */
+    fun isLoadingMoreMessages(): Boolean = isLoadingMore
 }
 
 /**
