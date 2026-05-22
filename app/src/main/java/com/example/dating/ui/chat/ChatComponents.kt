@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,10 @@ import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkSecondaryText
 import com.example.dating.ui.theme.DarkSurface
 import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightSurface
+import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.Gray300
 import com.example.dating.ui.theme.Gray500
 import java.text.SimpleDateFormat
@@ -55,6 +60,10 @@ fun ChatSearchBar(
     onSearchQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    
     TextField(
         value = searchQuery,
         onValueChange = onSearchQueryChange,
@@ -78,11 +87,11 @@ fun ChatSearchBar(
         },
         singleLine = true,
         colors = TextFieldDefaults.colors(
-            focusedTextColor = DarkText,
-            unfocusedTextColor = DarkText,
+            focusedTextColor = textColor,
+            unfocusedTextColor = textColor,
 
-            focusedContainerColor = DarkSurface,
-            unfocusedContainerColor = DarkSurface,
+            focusedContainerColor = surfaceColor,
+            unfocusedContainerColor = surfaceColor,
 
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
@@ -103,6 +112,10 @@ fun SuggestedConnectionCard(
     onConnect: (ChatUser) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val borderColor = if (isDarkTheme) DarkBackground else LightBackground
+    
     Column(
         modifier = modifier
             .width(80.dp)
@@ -135,7 +148,7 @@ fun SuggestedConnectionCard(
                         .clip(CircleShape)
                         .background(BrandPink)
                         .align(Alignment.BottomEnd)
-                        .border(2.dp, DarkBackground, CircleShape)
+                        .border(2.dp, borderColor, CircleShape)
                 )
             }
         }
@@ -146,7 +159,7 @@ fun SuggestedConnectionCard(
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = DarkText
+            color = textColor
         )
     }
 }
@@ -160,6 +173,8 @@ fun SuggestedConnectionsList(
     onConnect: (ChatUser) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
     if (suggestions.isEmpty()) return
 
@@ -174,7 +189,7 @@ fun SuggestedConnectionsList(
             text = "Có ${suggestions.size} người muốn kết nối với bạn",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = DarkSecondaryText
+            color = secondaryTextColor
         )
 
         LazyRow(
@@ -202,12 +217,17 @@ fun MessageItem(
     onSelectConversation: (Conversation) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+    val borderColor = if (isDarkTheme) DarkBackground else LightBackground
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onSelectConversation(conversation) }
-            .background(DarkBackground)
+            .background(backgroundColor)
             .padding(horizontal = 16.dp, vertical = 12.dp),
 
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -240,7 +260,7 @@ fun MessageItem(
                         .clip(CircleShape)
                         .background(BrandPink)
                         .align(Alignment.BottomEnd)
-                        .border(2.dp, DarkBackground, CircleShape)
+                        .border(2.dp, borderColor, CircleShape)
                 )
             }
         }
@@ -264,7 +284,7 @@ fun MessageItem(
                     text = conversation.user.fullName,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = DarkText,
+                    color = textColor,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -272,7 +292,7 @@ fun MessageItem(
             Text(
                 text = conversation.lastMessage,
                 style = MaterialTheme.typography.bodySmall,
-                color = DarkSecondaryText,
+                color = secondaryTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

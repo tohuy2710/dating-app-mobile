@@ -17,7 +17,8 @@ interface MatchesApiService {
     @GET("api/matches")
     suspend fun getMatches(
         @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 10
+        @Query("limit") limit: Int = 10,
+        @Query("search") search: String? = ""
     ): ApiResponse<MatchesListResponseData>
 
     @GET("api/matches/{matchId}")

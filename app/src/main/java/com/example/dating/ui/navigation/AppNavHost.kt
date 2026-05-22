@@ -19,7 +19,10 @@ import androidx.navigation.navArgument
 import com.example.dating.ui.chat.ChatOptionsScreen
 import com.example.dating.ui.chat.ChatScreen
 import com.example.dating.ui.chat.ConversationScreen
+import com.example.dating.ui.profile.InterestsSelectionScreen
 import com.example.dating.ui.profile.ProfileScreen
+import com.example.dating.ui.profile.SettingsScreen
+import com.example.dating.ui.profile.UserProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 
 @Composable
@@ -163,6 +166,21 @@ fun AppNavHost(
                         }
                     )
                 }
+            }
+
+            composable(Screen.Settings.route) {
+                SettingsScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable(Screen.EditInterests.route) {
+                InterestsSelectionScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            composable(Screen.Profile.route) {
+                UserProfileScreen(
+                    onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                    onEditInterestsClick = { navController.navigate(Screen.EditInterests.route) }
+                )
             }
         }
     }

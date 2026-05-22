@@ -25,6 +25,8 @@ import com.example.dating.core.network.RetrofitClient
 import com.example.dating.data.remote.MatchesApiService
 import com.example.dating.data.repository.ChatRepository
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 /**
  * ViewModel for managing chat/messaging related state and business logic.
@@ -44,6 +46,8 @@ class ChatViewModel : ViewModel() {
     private val chatRepository: ChatRepository by lazy {
         ChatRepository(matchesApiService)
     }
+
+    private var searchJob: Job? = null
 
     var chatUiState: ChatUiState by mutableStateOf(ChatUiState.Idle)
         private set
@@ -91,6 +95,58 @@ class ChatViewModel : ViewModel() {
      */
     fun updateSearchQuery(query: String) {
         searchQuery = query
+
+        searchJob?.cancel()
+
+        searchJob = viewModelScope.launch {
+
+            delay(1000)
+
+            performSearch(query)
+        }
+    }
+
+    private suspend fun searchConversations(search: String) {
+
+        try {
+
+            val conversations =
+                chatRepository.fetchConversations(
+                    page = 1,
+                    limit = 10,
+                    search = search.ifBlank { null }
+                )
+
+            val currentState = chatUiState
+
+            if (currentState is ChatUiState.Success) {
+
+                chatUiState = currentState.copy(
+                    conversations = conversations
+                )
+            } else {
+
+                chatUiState = ChatUiState.Success(
+                    conversations = conversations,
+                    suggestions = emptyList()
+                )
+            }
+
+        } catch (e: Exception) {
+
+            chatUiState =
+                ChatUiState.Error(
+                    e.message ?: "Failed to search conversations"
+                )
+        }
+    }
+
+    private fun performSearch(query: String) {
+
+        viewModelScope.launch {
+
+            searchConversations(query)
+        }
     }
 
     /**

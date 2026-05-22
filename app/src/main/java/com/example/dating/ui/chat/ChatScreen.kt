@@ -20,10 +20,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.DarkSecondaryText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightText
+import com.example.dating.ui.theme.LightSecondaryText
 import com.example.dating.ui.theme.BorderGray
 
 @Composable
@@ -32,11 +39,24 @@ fun ChatScreen(
     modifier: Modifier = Modifier,
     onConversationSelected: (Conversation) -> Unit = {}
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+    val focusManager = LocalFocusManager.current
+    
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(backgroundColor)
             .systemBarsPadding()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        focusManager.clearFocus()
+                    }
+                )
+            }
     ) {
         when (val state = viewModel.chatUiState) {
 
@@ -54,7 +74,7 @@ fun ChatScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(DarkBackground),
+                        .background(backgroundColor),
                     verticalArrangement = Arrangement.Top
                 ) {
 
@@ -62,7 +82,7 @@ fun ChatScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(DarkBackground)
+                                .background(backgroundColor)
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
@@ -71,7 +91,7 @@ fun ChatScreen(
                                 text = "Hòm thư",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = DarkText
+                                color = textColor
                             )
 
                             ChatSearchBar(
@@ -97,7 +117,7 @@ fun ChatScreen(
                             text = "Tin nhắn",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = DarkSecondaryText,
+                            color = secondaryTextColor,
                             modifier = Modifier.padding(
                                 horizontal = 16.dp,
                                 vertical = 8.dp
@@ -131,9 +151,9 @@ fun ChatScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "No messages yet",
+                                    text = "Không có tin nhắn nào",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = DarkSecondaryText,
+                                    color = secondaryTextColor,
                                     textAlign = TextAlign.Center
                                 )
                             }

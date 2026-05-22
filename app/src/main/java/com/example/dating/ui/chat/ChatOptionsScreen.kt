@@ -2,6 +2,7 @@ package com.example.dating.ui.chat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightText
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -36,15 +39,19 @@ fun ChatOptionsScreen(
         factory = ConversationViewModelFactory(matchId)
     )
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    
     when (val state = viewModel.conversationUiState) {
         ConversationUiState.Loading -> {
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(DarkBackground),
+                    .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Loading...", color = DarkText)
+                Text("Loading...", color = textColor)
             }
         }
         is ConversationUiState.Success -> {
@@ -70,17 +77,17 @@ fun ChatOptionsScreen(
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(DarkBackground),
+                    .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Error loading user", color = DarkText)
+                Text("Error loading user", color = textColor)
             }
         }
         ConversationUiState.Idle -> {
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(DarkBackground)
+                    .background(backgroundColor)
             )
         }
     }
@@ -95,10 +102,16 @@ private fun ChatOptionsScreenContent(
     onUnmatchClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val cardBackgroundColor = if (isDarkTheme) Color(0xFF333335) else Color(0xFFEEEEEE)
+    val dividerColor = if (isDarkTheme) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f)
+    
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(backgroundColor)
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -116,7 +129,7 @@ private fun ChatOptionsScreenContent(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = DarkText
+                    tint = textColor
                 )
             }
         }
@@ -138,7 +151,7 @@ private fun ChatOptionsScreenContent(
         // Tên người dùng
         Text(
             text = user.fullName,
-            color = Color.White,
+            color = textColor,
             fontSize = 24.sp,
             fontWeight = FontWeight.Medium
         )
@@ -150,14 +163,14 @@ private fun ChatOptionsScreenContent(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF333335))
+                .background(cardBackgroundColor)
                 .padding(vertical = 12.dp)
         ) {
             OptionItem(icon = Icons.Outlined.Block, title = "Block", onClick = onBlockClick)
-            Divider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 24.dp))
+            Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
 
             OptionItem(icon = Icons.Default.Report, title = "Report", onClick = onReportClick)
-            Divider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 24.dp))
+            Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
 
             OptionItem(icon = Icons.Default.Delete, title = "Unmatch", onClick = onUnmatchClick)
         }
@@ -170,6 +183,9 @@ private fun OptionItem(
     title: String,
     onClick: () -> Unit = {}
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -180,13 +196,13 @@ private fun OptionItem(
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = Color.White,
+            tint = textColor,
             modifier = Modifier.size(22.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = title,
-            color = Color.White,
+            color = textColor,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium
         )

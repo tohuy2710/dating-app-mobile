@@ -19,12 +19,13 @@ class ChatRepository(
 
     suspend fun fetchConversations(
         page: Int,
-        limit: Int
+        limit: Int,
+        search: String? = null
     ): List<Conversation> {
 
         return try {
 
-            val response = matchesApiService.getMatches(page, limit)
+            val response = matchesApiService.getMatches(page, limit, search)
 
             response.data.matches.map { matchWithUsers: MatchWithUsers ->
 

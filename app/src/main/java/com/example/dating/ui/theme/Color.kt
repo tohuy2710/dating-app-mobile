@@ -42,3 +42,11 @@ val DarkText = Color(0xFFFFFFFF)
 val DarkSecondaryText = Color(0xFFB0B0B0)
 val ChatBubblePink = Color(0xFFD73E6F)
 val ChatBubblePurple = Color(0xFF7C5CFF)
+
+// Light theme colors for chat
+val LightBackground = Color(0xFFFAFAFA)
+val LightSurface = Color(0xFFFFFFFF)
+val LightText = Color(0xFF1D1617)
+val LightSecondaryText = Color(0xFF7B6F72)
+val ChatBubblePinkLight = Color(0xFFFA4EBE)
+val ChatBubblePurpleLight = Color(0xFF8B5CF6)

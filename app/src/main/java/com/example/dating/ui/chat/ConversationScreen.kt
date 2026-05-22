@@ -65,14 +65,21 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.isSystemInDarkTheme
 import coil.compose.AsyncImage
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.ChatBubblePink
 import com.example.dating.ui.theme.ChatBubblePurple
+import com.example.dating.ui.theme.ChatBubblePinkLight
+import com.example.dating.ui.theme.ChatBubblePurpleLight
 import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkSecondaryText
 import com.example.dating.ui.theme.DarkSurface
 import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightSurface
+import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.Gray300
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -87,6 +94,13 @@ fun MessageBubble(
     isCurrentUser: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val bubbleColor = if (isCurrentUser) {
+        if (isDarkTheme) ChatBubblePurple else ChatBubblePurpleLight
+    } else {
+        if (isDarkTheme) ChatBubblePink else ChatBubblePinkLight
+    }
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -96,9 +110,7 @@ fun MessageBubble(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(
-                    if (isCurrentUser) ChatBubblePurple else ChatBubblePink
-                )
+                .background(bubbleColor)
                 .padding(12.dp)
                 .widthIn(max = 250.dp)
         ) {
@@ -147,10 +159,14 @@ fun ConversationHeader(
     onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(DarkBackground)
+            .background(backgroundColor)
             .padding(16.dp)
     ) {
         Row(
@@ -167,7 +183,7 @@ fun ConversationHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = DarkText
+                    tint = textColor
                 )
             }
 
@@ -204,7 +220,7 @@ fun ConversationHeader(
                 text = URLDecoder.decode(user.fullName, "UTF-8"),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = DarkText,
+                color = textColor,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -221,10 +237,17 @@ fun MessageInputField(
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+    val sendButtonColor = if (isDarkTheme) ChatBubblePurple else ChatBubblePurpleLight
+    
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(DarkBackground)
+            .background(backgroundColor)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -237,7 +260,7 @@ fun MessageInputField(
             Icon(
                 imageVector = Icons.Outlined.CameraAlt,
                 contentDescription = "Camera",
-                tint = DarkText,
+                tint = textColor,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -249,7 +272,7 @@ fun MessageInputField(
             Icon(
                 imageVector = Icons.Outlined.AttachFile,
                 contentDescription = "Add",
-                tint = DarkText,
+                tint = textColor,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -259,7 +282,7 @@ fun MessageInputField(
                 .weight(1f)
                 .height(40.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(DarkSurface)
+                .background(surfaceColor)
                 .padding(horizontal = 12.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -268,14 +291,14 @@ fun MessageInputField(
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = MaterialTheme.typography.bodySmall.copy(
-                    color = DarkText
+                    color = textColor
                 ),
                 decorationBox = { innerTextField ->
                     if (value.isEmpty()) {
                         Text(
                             text = "Nhắn tin...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = DarkSecondaryText
+                            color = secondaryTextColor
                         )
                     }
                     innerTextField()
@@ -292,9 +315,9 @@ fun MessageInputField(
                 imageVector = Icons.Outlined.Send,
                 contentDescription = "Send",
                 tint = if (value.isNotBlank()) {
-                    ChatBubblePurple
+                    sendButtonColor
                 } else {
-                    DarkSecondaryText
+                    secondaryTextColor
                 },
                 modifier = Modifier.size(20.dp)
             )
@@ -313,16 +336,20 @@ fun ConversationScreen(
     modifier: Modifier = Modifier,
     viewModel: ConversationViewModel = viewModel()
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    
     when (val state = viewModel.conversationUiState) {
 
         ConversationUiState.Loading -> {
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(DarkBackground),
+                    .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Loading conversation...", color = DarkText)
+                Text("Loading conversation...", color = textColor)
             }
         }
 
@@ -346,18 +373,18 @@ fun ConversationScreen(
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(DarkBackground),
+                    .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         "Error loading conversation",
-                        color = DarkText
+                        color = textColor
                     )
 
                     Text(
                         state.message,
-                        color = DarkSecondaryText
+                        color = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
                     )
                 }
             }
@@ -367,7 +394,7 @@ fun ConversationScreen(
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(DarkBackground)
+                    .background(backgroundColor)
             )
         }
     }
@@ -387,6 +414,9 @@ private fun ConversationScreenContent(
     isLoadingMore: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
     var messageInput by remember { mutableStateOf("") }
 
@@ -422,7 +452,7 @@ private fun ConversationScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(backgroundColor)
             .systemBarsPadding()
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -444,7 +474,7 @@ private fun ConversationScreenContent(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(DarkBackground),
+                .background(backgroundColor),
             state = listState,
             reverseLayout = false,
             contentPadding = PaddingValues(
@@ -475,7 +505,7 @@ private fun ConversationScreenContent(
                     ) {
                         Text(
                             "Loading more messages...",
-                            color = DarkSecondaryText,
+                            color = secondaryTextColor,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
