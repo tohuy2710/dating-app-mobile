@@ -3,6 +3,7 @@ package com.example.dating.ui.profile
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -65,25 +66,66 @@ import androidx.compose.material.icons.filled.LocationOn
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.dating.data.model.User
+import com.example.dating.data.model.UserPhoto
 
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    viewModel: DiscoveryViewModel = viewModel()
 ) {
+    val users by viewModel.users.collectAsState()
+    val index by viewModel.index.collectAsState()
+
+    val currentUser = users.getOrNull(index)
+
     val scrollState = rememberScrollState()
+    var offsetX by remember { mutableStateOf(0f) }
+
+    if (currentUser == null) {
+        EmptyState(onRetry = { viewModel.loadNextPage() })
+        return
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF7F7F7))
             .verticalScroll(scrollState)
-            .padding(bottom = 24.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            HeroImage()
-            
-            // Back button
+
+        // HERO (ONLY SWIPE HERE)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .pointerInput(currentUser.userId) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX += dragAmount
+                        },
+                        onDragEnd = {
+                            when {
+                                offsetX > 250 -> viewModel.likeUser(currentUser)
+                                offsetX < -250 -> viewModel.passUser(currentUser)
+                            }
+                            offsetX = 0f
+                        }
+                    )
+                }
+                .graphicsLayer {
+                    translationX = offsetX
+                    rotationZ = offsetX / 60
+                }
+        ) {
+
+            HeroImage(currentUser.avatarUrl)
+
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier
@@ -91,109 +133,96 @@ fun ProfileScreen(
                     .background(Color.Black.copy(alpha = 0.3f), CircleShape)
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
                     tint = White
                 )
             }
-
-            ActionButtonsRow(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = 36.dp)
-            )
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        ProfileCard()
+        ProfileCard(currentUser)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        InterestChips()
+        InterestChips(
+            currentUser.preferences
+                ?.anonymousInterests
+                ?.split(",")
+                ?.filter { it.isNotBlank() }
+                ?: emptyList()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        GalleryGrid()
+        GalleryGrid(currentUser.photos)
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        QACards()
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun HeroImage() {
-    Box(
+private fun HeroImage(imageUrl: String?) {
+
+    AsyncImage(
+        model = imageUrl.takeIf { !it.isNullOrBlank() } ?: R.drawable.default_avatar,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.82f)
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            .background(Color(0xFFF2D0D8))
-    ) {
-        androidx.compose.foundation.Image(
-            painter = painterResource(id = R.drawable.thl),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(0.dp)
-        )
-    }
+    )
 }
 
 @Composable
-private fun ActionButtonsRow(modifier: Modifier = Modifier) {
+private fun ActionButtonsRow(
+    modifier: Modifier = Modifier,
+    onPass: () -> Unit,
+    onLike: () -> Unit
+) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+
         FloatingActionButton(
             size = 56.dp,
             solidColor = SecondaryPurple,
             icon = Icons.Default.Close,
             iconTint = White,
-            iconModifier = Modifier.drawWithContent {
-                val contentDrawScope = this
-                drawContent()
-                // Draw once more with a tiny shift to make the stroke feel bolder.
-                translate(left = 0.6f, top = 0f) {
-                    contentDrawScope.drawContent()
-                }
-            }
+            onClick = onPass
         )
-        FloatingActionButton(
-            size = 72.dp,
-            background = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
-            icon = Icons.Default.Send,
-            iconTint = White,
-            iconModifier = Modifier.graphicsLayer {
-                rotationZ = -45f
-                transformOrigin = TransformOrigin.Center
-            }.offset(x = 4.dp)
-        )
+
         FloatingActionButton(
             size = 56.dp,
             solidColor = SecondaryPurple,
             icon = Icons.Default.Favorite,
-            iconTint = White
+            iconTint = White,
+            onClick = onLike
         )
     }
 }
 
 @Composable
 private fun FloatingActionButton(
-    size: androidx.compose.ui.unit.Dp,
+    size: Dp,
     background: Brush? = null,
     solidColor: Color? = null,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     iconTint: Color,
-    iconModifier: Modifier = Modifier
+    iconModifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     var pressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(targetValue = if (pressed) 1.08f else 1f, label = "fabScale")
+
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 1.08f else 1f,
+        label = ""
+    )
 
     Box(
         modifier = Modifier
@@ -208,23 +237,42 @@ private fun FloatingActionButton(
                 detectTapGestures(
                     onPress = {
                         pressed = true
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        tryAwaitRelease()
+                        haptic.performHapticFeedback(
+                            androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress
+                        )
+
+                        val released = tryAwaitRelease()
+
                         pressed = false
+
+                        if (released) onClick()
                     }
                 )
             },
         contentAlignment = Alignment.Center
     ) {
         if (background != null) {
-            Box(modifier = Modifier.matchParentSize().background(background))
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(background)
+            )
         }
-        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(size * 0.8f).then(iconModifier))
+
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier
+                .size(size * 0.8f)
+                .then(iconModifier)
+        )
     }
 }
 
 @Composable
-private fun ProfileCard() {
+private fun ProfileCard(user: User) {
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,185 +281,137 @@ private fun ProfileCard() {
             .background(White)
             .padding(16.dp)
     ) {
+
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE8F5E9)),
-                contentAlignment = Alignment.Center
-            ) {
-                androidx.compose.foundation.Image(
-                    painter = painterResource(id = R.drawable.vnu),
-                    contentDescription = "VNU logo",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(6.dp)
-                )
-            }
+
             Spacer(modifier = Modifier.width(12.dp))
+
             Column(modifier = Modifier.weight(1f)) {
+
                 Text(
-                    text = "Trần Hà Linh, 2006",
+                    text = "${user.fullName}",
                     color = BrandPink,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
+
                 Text(
-                    text = "Đại học Quốc gia Hà Nội",
+                    text = user.birthDate ?: "Không rõ ngày sinh",
+                    color = Gray700,
+                    fontSize = 13.sp
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = user.bio ?: "Chưa có giới thiệu",
                     color = Black900,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
+                    fontSize = 14.sp
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.LocationOn, contentDescription = null, tint = SecondaryPurple)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Cầu Giấy",
-                color = Gray700,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Surface(
-            color = BorderGray,
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text(
-                text = "Kích thước cơ bản cho Android thường là 360x576, 360x640 hoặc 360x720 (tỉ lệ 16:10, 16:9 hoặc 2:1). Vì vậy, tất cả các số đo trong hướng dẫn Material Design đều dựa trên độ phân giải này.",
-                modifier = Modifier.padding(16.dp),
-                color = Gray700,
-                fontSize = 13.sp,
-                lineHeight = 18.sp
-            )
-        }
     }
 }
 
 @Composable
-private fun InterestChips() {
-    val labels = listOf(
-        "Thanh Hóa",
-        "Ăn rau má",
-        "Học androidddd",
-        "Phó đường tàu",
-        "Đồ thơm mỡ ai đó 123666"
-    )
-    ChipRow(labels = labels)
+private fun InterestChips(interests: List<String>) {
+    ChipRow(labels = interests)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipRow(labels: List<String>) {
-    FlowRow(
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(White)
+            .padding(16.dp)
     ) {
-        labels.forEach { label ->
-            Surface(
-                color = Color(0xFFF1F1F1),
-                shape = RoundedCornerShape(999.dp),
-                modifier = Modifier.border(1.dp, Color(0xFFE5E5E5), RoundedCornerShape(999.dp))
-            ) {
-                Text(
-                    text = label,
-                    color = Gray700,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                )
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            labels.forEach { label ->
+
+                Surface(
+                    color = BrandPink.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(999.dp),
+                    modifier = Modifier.border(
+                        1.dp,
+                        BrandPink.copy(alpha = 0.6f),
+                        RoundedCornerShape(999.dp)
+                    )
+                ) {
+                    Text(
+                        text = label,
+                        color = BrandPinkDark,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(
+                            horizontal = 14.dp,
+                            vertical = 10.dp
+                        )
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun GalleryGrid() {
+private fun GalleryGrid(photos: List<UserPhoto>) {
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            GalleryTile(modifier = Modifier.weight(1f))
-            GalleryTile(modifier = Modifier.weight(1f))
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            GalleryTile(modifier = Modifier.weight(1f))
-            GalleryTile(modifier = Modifier.weight(1f))
+
+        photos.chunked(2).forEach { row ->
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                row.forEach { photo ->
+
+                    AsyncImage(
+                        model = photo.imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun GalleryTile(modifier: Modifier = Modifier) {
+fun EmptyState(onRetry: () -> Unit) {
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFF2D0D8))
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        androidx.compose.foundation.Image(
-            painter = painterResource(id = R.drawable.loading_img),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-}
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Không có người dùng nào phù hợp")
 
-@Composable
-private fun QACards() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        QACard(
-            question = "Gu cua em la j?",
-            answer = "ng thanh hoa"
-        )
-        QACard(
-            question = "Anh va bo em roi xuong ne em cua ai tre?",
-            answer = "Cuu ca 2"
-        )
-    }
-}
+            Spacer(modifier = Modifier.height(12.dp))
 
-@Composable
-private fun QACard(question: String, answer: String) {
-    Surface(
-        color = White,
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = question,
-                color = BrandPink,
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = answer,
-                color = Black900,
-                fontSize = 14.sp
-            )
+            androidx.compose.material3.Button(onClick = onRetry) {
+                Text("Tải lại")
+            }
         }
     }
 }

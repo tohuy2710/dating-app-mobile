@@ -140,7 +140,7 @@ private fun MatchNowButton(onClick: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Match Now",
+                text = "Kết nối ngay",
                 style = MaterialTheme.typography.titleMedium,
                 color = White,
                 fontWeight = FontWeight.Bold

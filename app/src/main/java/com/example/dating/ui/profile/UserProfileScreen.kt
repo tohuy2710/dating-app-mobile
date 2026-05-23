@@ -60,6 +60,7 @@ import com.example.dating.R
 import com.example.dating.data.model.User
 import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.BrandPinkDark
 import com.example.dating.ui.theme.Gray700
 import com.example.dating.ui.theme.SecondaryPurple
 import com.example.dating.ui.theme.White
@@ -241,12 +242,6 @@ private fun UserProfileContent(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        DeleteAccountButton(
-            onDeleteClick = {
-                showDeleteConfirm = true
-            }
-        )
     }
 
     if (showPhotoDialog) {
@@ -570,19 +565,19 @@ private fun UserInterestChips(
             interests.forEach { label ->
 
                 Surface(
-                    color = Color(0xFFF1F1F1),
+                    color = BrandPink.copy(alpha = 0.12f),
                     shape = RoundedCornerShape(999.dp),
                     modifier = Modifier.border(
                         1.dp,
-                        Color(0xFFE5E5E5),
+                        BrandPink.copy(alpha = 0.6f),
                         RoundedCornerShape(999.dp)
                     )
                 ) {
-
                     Text(
                         text = label,
-                        color = Gray700,
+                        color = BrandPinkDark,
                         fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(
                             horizontal = 14.dp,
                             vertical = 10.dp
@@ -673,24 +668,6 @@ private fun UserGalleryTile(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
-        )
-    }
-}
-
-@Composable
-private fun DeleteAccountButton(
-    onDeleteClick: () -> Unit
-) {
-
-    TextButton(
-        onClick = onDeleteClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        Text(
-            text = "Xóa tài khoản",
-            color = Color.Red,
-            fontSize = 14.sp
         )
     }
 }
