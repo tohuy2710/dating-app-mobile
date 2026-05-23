@@ -8,8 +8,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,6 +25,8 @@ import com.example.dating.ui.chat.ChatScreen
 import com.example.dating.ui.chat.ConversationScreen
 import com.example.dating.ui.profile.InterestsSelectionScreen
 import com.example.dating.ui.profile.ProfileScreen
+import com.example.dating.ui.profile.ProfileUiState
+import com.example.dating.ui.profile.ProfileViewModel
 import com.example.dating.ui.profile.SettingsScreen
 import com.example.dating.ui.profile.UserProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
@@ -43,6 +49,10 @@ fun AppNavHost(
                 currentRoute == Screen.MatchProfile.route ||
                 currentRoute == Screen.Settings.route ||
                 currentRoute == Screen.EditInterests.route
+
+    var selectedInterests by remember {
+        mutableStateOf<List<String>>(emptyList())
+    }
 
     LaunchedEffect(initialMatchId) {
         if (initialMatchId != null) {
@@ -172,14 +182,46 @@ fun AppNavHost(
                 SettingsScreen(onBackClick = { navController.popBackStack() })
             }
 
-            composable(Screen.EditInterests.route) {
-                InterestsSelectionScreen(onBackClick = { navController.popBackStack() })
+            composable(Screen.EditInterests.route) { backStackEntry ->
+
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(
+                        Screen.Profile.route
+                    )
+                }
+
+                val profileViewModel: ProfileViewModel =
+                    viewModel(parentEntry)
+
+                InterestsSelectionScreen(
+
+                    initialSelectedInterests =
+                        selectedInterests.toSet(),
+
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+
+                    onSelectionDone = { interests ->
+
+                        profileViewModel.updateAnonymousInterests(
+                            interests.toList()
+                        )
+
+                        navController.popBackStack()
+                    }
+                )
             }
 
             composable(Screen.Profile.route) {
                 UserProfileScreen(
                     onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                    onEditInterestsClick = { navController.navigate(Screen.EditInterests.route) }
+                    onEditInterestsClick = { interests ->
+                        selectedInterests = interests
+                        navController.navigate(
+                            Screen.EditInterests.route
+                        )
+                    }
                 )
             }
         }

@@ -177,7 +177,7 @@ data class MatchWithUsers(
     val unreadMessages: List<Message> = emptyList(),
 
     @SerialName("lastMessage")
-    val lastMessage: Message
+    val lastMessage: Message? = null
 )
 
 @Serializable

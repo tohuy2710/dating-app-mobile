@@ -483,15 +483,36 @@ private fun ConversationScreenContent(
             )
         ) {
 
-            items(
-                items = conversation.messages,
-                key = { it.messageId }
-            ) { message ->
+            if (conversation.messages.isEmpty()) {
 
-                MessageBubble(
-                    message = message,
-                    isCurrentUser = message.senderId == currentUserId
-                )
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(top = 48.dp),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        Text(
+                            text = "Gửi lời chào đầu tiên đi 👋",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = secondaryTextColor,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+            } else {
+
+                items(
+                    items = conversation.messages,
+                    key = { it.messageId }
+                ) { message ->
+
+                    MessageBubble(
+                        message = message,
+                        isCurrentUser = message.senderId == currentUserId
+                    )
+                }
             }
 
             // Show loading indicator at the bottom

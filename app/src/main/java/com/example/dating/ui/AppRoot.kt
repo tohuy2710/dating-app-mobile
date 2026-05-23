@@ -17,14 +17,10 @@ fun AppRoot(
     var userId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(Unit) {
-        authViewModel.checkAuthStatus { isAuth ->
-//            isLoggedIn = isAuth
-//            if (isAuth) {
-//                userId = 1 // lấy từ token đã lưu
-//            }
-            isLoggedIn = true
-            if (true) {
-                userId = 1 // lấy từ token đã lưu
+        authViewModel.checkAuthStatus { isAuth, id ->
+            isLoggedIn = isAuth
+            if (isAuth) {
+                userId = id
             }
         }
     }

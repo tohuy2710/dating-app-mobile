@@ -103,9 +103,9 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         LoginField(
-            value = authViewModel.usernameInput,
-            onValueChange = authViewModel::updateUsername,
-            placeholder = "Tên đăng nhập",
+            value = authViewModel.emailInput,
+            onValueChange = authViewModel::updateEmail,
+            placeholder = "Email",
             leadingIcon = Icons.Outlined.AccountCircle,
             enabled = authViewModel.loginUiState !is LoginUiState.Loading
         )

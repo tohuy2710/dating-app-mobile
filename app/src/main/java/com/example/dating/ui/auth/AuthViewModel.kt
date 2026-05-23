@@ -26,6 +26,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.dating.DatingApplication
+import com.example.dating.core.auth.JwtUtils
+import com.example.dating.core.auth.TokenManager
 import com.example.dating.data.model.LoginResponse
 import com.example.dating.data.repository.AuthRepository
 import kotlinx.coroutines.launch
@@ -51,14 +53,14 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     var loginUiState: LoginUiState by mutableStateOf(LoginUiState.Idle)
         private set
 
-    var usernameInput: String by mutableStateOf("")
+    var emailInput: String by mutableStateOf("")
         private set
 
     var passwordInput: String by mutableStateOf("")
         private set
 
-    fun updateUsername(newUsername: String) {
-        usernameInput = newUsername
+    fun updateEmail(newEmail: String) {
+        emailInput = newEmail
     }
 
     fun updatePassword(newPassword: String) {
@@ -87,7 +89,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
      * Saves the token to local database upon successful login.
      */
     fun login() {
-        if (usernameInput.isEmpty() || passwordInput.isEmpty()) {
+        if (emailInput.isEmpty() || passwordInput.isEmpty()) {
             loginUiState = LoginUiState.Error("Username and password are required")
             return
         }
@@ -95,10 +97,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             loginUiState = LoginUiState.Loading
             loginUiState = try {
-                val result = authRepository.login(usernameInput, passwordInput)
+                val result = authRepository.login(emailInput, passwordInput)
                 
                 // Save token to local database
-                authRepository.saveToken(result.token, result.tokenType, result.expiresAt)
+                authRepository.saveToken(result.token)
+                TokenManager.setToken(result.token)
                 
                 // Clear password for security
                 passwordInput = ""
@@ -126,9 +129,69 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun logout() {
         viewModelScope.launch {
             authRepository.clearTokens()
-            usernameInput = ""
+            emailInput = ""
             passwordInput = ""
             loginUiState = LoginUiState.Idle
+        }
+    }
+
+    fun checkAuthStatus(
+        onFinished: (Boolean, Int?) -> Unit
+    ) {
+
+        viewModelScope.launch {
+
+            try {
+
+                val tokenEntity =
+                    authRepository.getLatestToken()
+
+                if (tokenEntity == null) {
+
+                    onFinished(false, null)
+
+                    return@launch
+                }
+
+                // set token vào memory
+                TokenManager.setToken(
+                    tokenEntity.token
+                )
+
+                // interceptor sẽ tự attach token
+                val isValid =
+                    authRepository.checkToken()
+
+                if (!isValid) {
+
+                    authRepository.clearTokens()
+
+                    TokenManager.clearToken()
+
+                    onFinished(false, null)
+
+                    return@launch
+                }
+
+                val userId =
+                    JwtUtils.getUserId(
+                        tokenEntity.token
+                    )
+
+                onFinished(
+                    true,
+                    userId
+                )
+
+
+            } catch (e: Exception) {
+
+                authRepository.clearTokens()
+
+                TokenManager.clearToken()
+
+                onFinished(false, null)
+            }
         }
     }
 

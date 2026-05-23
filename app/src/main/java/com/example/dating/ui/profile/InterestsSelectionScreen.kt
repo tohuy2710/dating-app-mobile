@@ -1,39 +1,52 @@
 package com.example.dating.ui.profile
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.dating.data.InterestsData
+import com.example.dating.ui.common.SelectableInterests
 import com.example.dating.ui.theme.BrandPink
-import com.example.dating.ui.theme.White
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class
+)
 @Composable
-fun InterestsSelectionScreen(onBackClick: () -> Unit) {
-    val availableInterests = listOf(
-        "Coding", "Travel", "Music", "Photography", "Gaming", 
-        "Cooking", "Sports", "Art", "Movies", "Reading", 
-        "Dancing", "Fashion", "Nature", "Pets", "Coffee"
-    )
-    var selectedInterests by remember { mutableStateOf(setOf("Coding", "Travel")) }
+fun InterestsSelectionScreen(
+    initialSelectedInterests: Set<String> = emptySet(),
+    onBackClick: () -> Unit,
+    onSelectionDone: (Set<String>) -> Unit
+) {
+    // Tạo state với các sở thích đã chọn từ profile
+    var selectedInterests by remember { mutableStateOf(initialSelectedInterests) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Interests") },
+                title = { Text("Sở thích") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    TextButton(onClick = onBackClick) {
-                        Text("Done", color = BrandPink)
+                    TextButton(onClick = { onSelectionDone(selectedInterests) }) {
+                        Text("Xong", color = BrandPink)
                     }
                 }
             )
@@ -46,34 +59,20 @@ fun InterestsSelectionScreen(onBackClick: () -> Unit) {
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                "Select interests that describe you best",
+                text = "Chọn những sở thích phù hợp với bạn",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                availableInterests.forEach { interest ->
-                    val isSelected = selectedInterests.contains(interest)
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            selectedInterests = if (isSelected) {
-                                selectedInterests - interest
-                            } else {
-                                selectedInterests + interest
-                            }
-                        },
-                        label = { Text(interest) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = BrandPink,
-                            selectedLabelColor = White
-                        )
-                    )
-                }
-            }
+
+            // Combine availableInterests với các sở thích đang chọn nhưng không có trong list mặc định
+            val allInterests = (InterestsData.availableInterests + initialSelectedInterests)
+                .distinct()
+
+            SelectableInterests(
+                availableInterests = allInterests,
+                selectedInterests = selectedInterests,
+                onSelectionChange = { selectedInterests = it }
+            )
         }
     }
 }

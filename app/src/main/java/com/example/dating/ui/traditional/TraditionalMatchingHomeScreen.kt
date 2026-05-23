@@ -157,10 +157,8 @@ private fun MatchNowButton(onClick: () -> Unit) {
 @Composable
 private fun ActionRow() {
     val actionItems = listOf(
-        Icons.Default.Favorite to "đã thích bạn",
-        Icons.Default.Star to "nổi bật",
-        Icons.Default.Email to "tin nhắn",
-        Icons.Default.Star to "xem lại"
+        Icons.Default.Favorite to "Đã thích bạn",
+        Icons.Default.Star to "Bạn đã thích",
     )
 
     Row(

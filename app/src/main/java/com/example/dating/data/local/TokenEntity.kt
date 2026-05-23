@@ -26,8 +26,8 @@ import androidx.room.PrimaryKey
 data class TokenEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+
     val token: String,
-    val tokenType: String,
-    val expiresAt: String,
+
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -26,6 +26,7 @@ import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
+import com.example.dating.core.auth.TokenManager
 
 /**
  * Singleton object for Retrofit client configuration.
@@ -51,11 +52,21 @@ object RetrofitClient {
      * Adds: Authorization: Bearer {token}
      */
     private val authInterceptor = Interceptor { chain ->
-        val originalRequest: Request = chain.request()
-        val requestWithToken = originalRequest.newBuilder()
-            .header("Authorization", "Bearer ${AppConfig.MOCK_JWT_TOKEN}")
-            .build()
-        chain.proceed(requestWithToken)
+
+        val originalRequest = chain.request()
+
+        val builder = originalRequest.newBuilder()
+
+        val token = TokenManager.getToken()
+
+        if (!token.isNullOrEmpty()) {
+            builder.header(
+                "Authorization",
+                "Bearer $token"
+            )
+        }
+
+        chain.proceed(builder.build())
     }
 
     private val okHttpClient = OkHttpClient.Builder()

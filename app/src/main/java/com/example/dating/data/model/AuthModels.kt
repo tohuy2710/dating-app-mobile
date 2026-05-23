@@ -24,7 +24,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class LoginRequest(
-    val username: String,
+    val email: String,
     val password: String
 )
 
@@ -34,14 +34,32 @@ data class LoginRequest(
  */
 @Serializable
 data class LoginResponse(
-    val message: String,
-    val token: String,
-    @SerialName("token_type")
-    val tokenType: String,
-    @SerialName("expires_in")
-    val expiresIn: Long,
-    @SerialName("expires_at")
-    val expiresAt: String
+    val user: AuthUser,
+    val token: String
+)
+
+@Serializable
+data class AuthUser(
+    @SerialName("user_id")
+    val userId: Int,
+
+    val email: String,
+
+    @SerialName("full_name")
+    val fullName: String,
+
+    @SerialName("birth_date")
+    val birthDate: String,
+
+    val gender: String,
+
+    val bio: String? = null,
+
+    @SerialName("default_mode")
+    val defaultMode: String? = null,
+
+    @SerialName("created_at")
+    val createdAt: String
 )
 
 /**

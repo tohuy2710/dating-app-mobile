@@ -26,31 +26,14 @@ import com.example.dating.data.remote.AuthApiService
  * Repository interface for authentication operations.
  */
 interface AuthRepository {
-    /**
-     * Performs login with username and password.
-     * @param username User username
-     * @param password User password
-     * @return LoginResponse with token and metadata
-     */
-    suspend fun login(username: String, password: String): LoginResponse
+    suspend fun login(email: String, password: String): LoginResponse
 
-    /**
-     * Saves the login token to local database.
-     * @param token The token to save
-     * @param tokenType The type of token (e.g., "Bearer")
-     * @param expiresAt When the token expires
-     */
-    suspend fun saveToken(token: String, tokenType: String, expiresAt: String)
+    suspend fun checkToken(): Boolean
 
-    /**
-     * Retrieves the latest saved token from local database.
-     * @return TokenEntity or null if no token exists
-     */
+    suspend fun saveToken(token: String)
+
     suspend fun getLatestToken(): TokenEntity?
 
-    /**
-     * Clears all tokens from local database (logout).
-     */
     suspend fun clearTokens()
 }
 
@@ -62,18 +45,36 @@ class NetworkAuthRepository(
     private val tokenDao: TokenDao
 ) : AuthRepository {
 
-    override suspend fun login(username: String, password: String): LoginResponse {
-        return authApiService.login(LoginRequest(username, password))
+    override suspend fun login(
+        email: String,
+        password: String
+    ): LoginResponse {
+
+        return authApiService
+            .login(LoginRequest(email, password))
+            .data
     }
 
-    override suspend fun saveToken(token: String, tokenType: String, expiresAt: String) {
-        val tokenEntity = TokenEntity(
-            token = token,
-            tokenType = tokenType,
-            expiresAt = expiresAt,
-            createdAt = System.currentTimeMillis()
-        )
+    override suspend fun saveToken(token: String) {
+
+        val tokenEntity =
+            TokenEntity(
+                token = token
+            )
+
         tokenDao.insertToken(tokenEntity)
+    }
+
+    override suspend fun checkToken(): Boolean {
+
+        return try {
+
+            authApiService.checkToken().data
+
+        } catch (e: Exception) {
+
+            false
+        }
     }
 
     override suspend fun getLatestToken(): TokenEntity? {

@@ -16,6 +16,7 @@
 
 package com.example.dating.data.remote
 
+import com.example.dating.ui.chat.ApiResponse
 import com.example.dating.data.model.LoginRequest
 import com.example.dating.data.model.LoginResponse
 import retrofit2.http.Body
@@ -25,10 +26,9 @@ import retrofit2.http.POST
  * A public interface that exposes authentication endpoints.
  */
 interface AuthApiService {
-    /**
-     * Login endpoint that accepts credentials and returns token with metadata.
-     * The @POST annotation indicates that the "/dev/login" endpoint will be requested with the POST HTTP method
-     */
-    @POST("dev/login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): ApiResponse<LoginResponse>
+
+    @POST("api/auth/token-checking")
+    suspend fun checkToken(): ApiResponse<Boolean>
 }

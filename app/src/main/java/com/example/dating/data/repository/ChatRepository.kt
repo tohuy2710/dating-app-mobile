@@ -36,7 +36,7 @@ class ChatRepository(
                         matchWithUsers.user1
                     }
 
-                val lastMessage = matchWithUsers.lastMessage.content ?: "Start chatting!"
+                val lastMessage = matchWithUsers.lastMessage?.content ?: "Gửi lời chào đầu tiên đi 👋"
 
                 Conversation(
                     matchId = matchWithUsers.matchId,
