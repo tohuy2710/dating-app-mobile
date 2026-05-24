@@ -232,3 +232,19 @@ sealed class ChatUiState {
 
     data object Idle : ChatUiState()
 }
+
+@Serializable
+data class AnonymousMatchResponse(
+
+    val status: String,
+
+    @SerialName("matchScore")
+    val matchScore: Int? = null,
+
+    val match: MatchDetailResponseData? = null,
+
+    @SerialName("queueId")
+    val queueId: Int? = null,
+
+    val message: String? = null
+)

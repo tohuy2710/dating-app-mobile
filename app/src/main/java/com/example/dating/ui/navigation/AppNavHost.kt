@@ -30,6 +30,7 @@ import com.example.dating.ui.profile.ProfileViewModel
 import com.example.dating.ui.profile.SettingsScreen
 import com.example.dating.ui.profile.UserProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
+import com.example.dating.ui.anonymous.AnonymousMatchingScreen
 
 @Composable
 fun AppNavHost(
@@ -92,15 +93,13 @@ fun AppNavHost(
 
             composable(Screen.Anonymous.route) {
 
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Text(
-                        text = "Anonymous matching coming soon"
-                    )
-                }
+                AnonymousMatchingScreen(
+                    onNavigateToConversation = { matchId ->
+                        navController.navigate(
+                            Screen.Conversation.createRoute(matchId)
+                        )
+                    }
+                )
             }
 
             composable(Screen.Chat.route) {

@@ -1,5 +1,6 @@
 package com.example.dating.data.remote
 
+import com.example.dating.ui.chat.AnonymousMatchResponse
 import com.example.dating.ui.chat.ApiResponse
 import com.example.dating.ui.chat.MatchDetailResponseData
 import com.example.dating.ui.chat.MatchesListResponseData
@@ -38,4 +39,7 @@ interface MatchesApiService {
         @Path("matchId") matchId: Int,
         @Body messageRequest: SendMessageRequest
     ): ApiResponse<Message>
+
+    @POST("api/matches/anonymous")
+    suspend fun anonymousMatch() : ApiResponse<AnonymousMatchResponse>
 }

@@ -57,6 +57,7 @@ fun ChatOptionsScreen(
         is ConversationUiState.Success -> {
             ChatOptionsScreenContent(
                 user = state.conversation.user,
+                matchMode = state.conversation.matchMode,
                 onBackClick = onBackClick,
                 onBlockClick = {
                     // TODO: Implement block functionality
@@ -96,6 +97,7 @@ fun ChatOptionsScreen(
 @Composable
 private fun ChatOptionsScreenContent(
     user: ChatUser,
+    matchMode: String,
     onBackClick: () -> Unit,
     onBlockClick: () -> Unit,
     onReportClick: () -> Unit,
@@ -107,6 +109,11 @@ private fun ChatOptionsScreenContent(
     val textColor = if (isDarkTheme) DarkText else LightText
     val cardBackgroundColor = if (isDarkTheme) Color(0xFF333335) else Color(0xFFEEEEEE)
     val dividerColor = if (isDarkTheme) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f)
+
+    val displayUser = getDisplayUser(
+        user = user,
+        matchMode = matchMode
+    )
     
     Column(
         modifier = modifier
@@ -138,7 +145,7 @@ private fun ChatOptionsScreenContent(
 
         // Avatar
         AsyncImage(
-            model = user.getDisplayAvatarUrl(),
+            model = displayUser.avatar,
             contentDescription = user.fullName,
             modifier = Modifier
                 .size(100.dp)
@@ -150,7 +157,7 @@ private fun ChatOptionsScreenContent(
 
         // Tên người dùng
         Text(
-            text = user.fullName,
+            text = displayUser.fullName,
             color = textColor,
             fontSize = 24.sp,
             fontWeight = FontWeight.Medium

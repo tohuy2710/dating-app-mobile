@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.dating.R
 import coil.compose.AsyncImage
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
@@ -222,6 +223,10 @@ fun MessageItem(
     val textColor = if (isDarkTheme) DarkText else LightText
     val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
     val borderColor = if (isDarkTheme) DarkBackground else LightBackground
+    val displayUser = getDisplayUser(
+        user = conversation.user,
+        matchMode = conversation.matchMode
+    )
 
     Row(
         modifier = modifier
@@ -245,8 +250,8 @@ fun MessageItem(
         ) {
 
             AsyncImage(
-                model = conversation.user.getDisplayAvatarUrl(),
-                contentDescription = conversation.user.fullName,
+                model = displayUser.avatar,
+                contentDescription = displayUser.fullName,
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape),
@@ -281,7 +286,7 @@ fun MessageItem(
             ) {
 
                 Text(
-                    text = conversation.user.fullName,
+                    text = displayUser.fullName,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = textColor,

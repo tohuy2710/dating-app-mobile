@@ -1,0 +1,555 @@
+package com.example.dating.ui.anonymous
+
+import android.annotation.SuppressLint
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.BrandPinkDark
+import com.example.dating.ui.theme.MarsPhotosTheme
+import com.example.dating.ui.theme.White
+import kotlinx.coroutines.delay
+import kotlin.math.cos
+import kotlin.math.sin
+
+@Composable
+fun AnonymousMatchingScreen(
+    modifier: Modifier = Modifier,
+    viewModel: AnonymousViewModel = viewModel(),
+    onNavigateToConversation: (Int) -> Unit = {}
+) {
+
+    val uiState = viewModel.anonymousUiState
+    val remainingSeconds = viewModel.remainingSeconds
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(White)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Spacer(modifier = Modifier.height(56.dp))
+
+        AnimatedAnonymousCard()
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Text(
+            text = "Kết nối ẩn danh",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        AnonymousFeatureRow()
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = {
+                viewModel.startAnonymousMatching()
+            },
+            shape = RoundedCornerShape(999.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .background(
+                    brush = Brush.linearGradient(
+                        listOf(
+                            BrandPinkDark,
+                            BrandPink
+                        )
+                    ),
+                    shape = RoundedCornerShape(999.dp)
+                )
+        ) {
+
+            Text(
+                text = "Bắt đầu",
+                style = MaterialTheme.typography.titleMedium,
+                color = White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    /**
+     * SEARCHING / QUEUED
+     */
+    if (
+        uiState is AnonymousUiState.Searching ||
+        uiState is AnonymousUiState.Queued
+    ) {
+
+        AlertDialog(
+            onDismissRequest = {},
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+                        viewModel.cancelMatching()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BrandPink
+                    ),
+                    shape = RoundedCornerShape(999.dp)
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        tint = White
+                    )
+
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Text(
+                        text = "Hủy",
+                        color = White
+                    )
+                }
+            },
+
+            title = {
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    RotatingAnonymousIcon()
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Đang tìm kiếm...",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+
+            text = {
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    Text(
+                        text = "Đang tìm người phù hợp với bạn",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    CircularProgressIndicator(
+                        color = BrandPink
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "${remainingSeconds}s",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandPink
+                    )
+                }
+            },
+
+            shape = RoundedCornerShape(28.dp),
+            containerColor = White
+        )
+    }
+
+    /**
+     * MATCHED
+     */
+    if (uiState is AnonymousUiState.Matched) {
+
+        val match = uiState.match
+
+        AlertDialog(
+            onDismissRequest = {},
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        match?.matchId?.let { matchId ->
+
+                            viewModel.resetState()
+
+                            onNavigateToConversation(matchId)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BrandPink
+                    ),
+                    shape = RoundedCornerShape(999.dp)
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.Chat,
+                        contentDescription = null,
+                        tint = White
+                    )
+
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Text(
+                        text = "Nhắn tin ngay",
+                        color = White
+                    )
+                }
+            },
+
+            title = {
+
+                Text(
+                    text = "Đã tìm thấy người phù hợp 🎉",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+
+            text = {
+
+                Column {
+
+                    Text(
+                        text = "Hai bạn có nhiều sở thích tương đồng.",
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Điểm tương thích: ${uiState.matchScore ?: 0}",
+                        fontWeight = FontWeight.Bold,
+                        color = BrandPink
+                    )
+                }
+            },
+
+            shape = RoundedCornerShape(28.dp),
+            containerColor = White
+        )
+    }
+
+    /**
+     * TIMEOUT
+     */
+    if (uiState is AnonymousUiState.Timeout) {
+
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.resetState()
+            },
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+                        viewModel.resetState()
+                    }
+                ) {
+
+                    Text("OK")
+                }
+            },
+
+            title = {
+                Text("Không tìm thấy ai")
+            },
+
+            text = {
+                Text("Hiện chưa có người phù hợp. Hãy thử lại sau.")
+            }
+        )
+    }
+}
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Composable
+private fun AnimatedAnonymousCard() {
+
+    val infinite = rememberInfiniteTransition(label = "anonymous")
+
+    val progress by infinite.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 2600,
+                easing = LinearEasing
+            )
+        ),
+        label = "progress"
+    )
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+    ) {
+
+        val stroke = 6.dp
+        val radius = 24.dp
+
+        val w = constraints.maxWidth.toFloat()
+        val h = constraints.maxHeight.toFloat()
+
+        val cx =
+            w / 2 + (w / 2) * cos(2 * Math.PI * progress).toFloat()
+
+        val cy =
+            h / 2 + (h / 2) * sin(2 * Math.PI * progress).toFloat()
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind {
+
+                    drawRoundRect(
+                        brush = Brush.sweepGradient(
+                            colors = listOf(
+                                BrandPink,
+                                BrandPinkDark,
+                                Color(0xFFFF8AD8),
+                                BrandPink
+                            ),
+                            center = Offset(cx, cy)
+                        ),
+                        cornerRadius = CornerRadius(
+                            radius.toPx(),
+                            radius.toPx()
+                        ),
+                        style = Stroke(stroke.toPx())
+                    )
+                }
+                .padding(stroke)
+                .clip(RoundedCornerShape(radius))
+                .background(Color(0xFFF8F5FF)),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    BrandPinkDark,
+                                    BrandPink
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.VisibilityOff,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(58.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "Ẩn danh tuyệt đối",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnonymousFeatureRow() {
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+
+        FeatureItem(
+            icon = Icons.Default.Security,
+            title = "Riêng tư"
+        )
+
+        FeatureItem(
+            icon = Icons.Default.Psychology,
+            title = "Cùng sở thích"
+        )
+
+        FeatureItem(
+            icon = Icons.Default.VisibilityOff,
+            title = "Ẩn danh"
+        )
+    }
+}
+
+@Composable
+private fun FeatureItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String
+) {
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(58.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF4EEFF)),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = BrandPink,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF818181)
+        )
+    }
+}
+
+@Composable
+private fun RotatingAnonymousIcon() {
+
+    val infinite = rememberInfiniteTransition(label = "rotate")
+
+    val rotation by infinite.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1600,
+                easing = LinearEasing
+            )
+        ),
+        label = "rotation"
+    )
+
+    Box(
+        contentAlignment = Alignment.Center
+    ) {
+
+        Surface(
+            modifier = Modifier.size(84.dp),
+            shape = CircleShape,
+            color = Color(0xFFF4EEFF)
+        ) {
+
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+
+                Icon(
+                    imageVector = Icons.Default.VisibilityOff,
+                    contentDescription = null,
+                    tint = BrandPink,
+                    modifier = Modifier.size(42.dp)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewAnonymousScreen() {
+
+    MarsPhotosTheme {
+
+        Surface {
+            AnonymousMatchingScreen()
+        }
+    }
+}

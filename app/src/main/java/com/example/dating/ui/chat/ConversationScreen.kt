@@ -154,6 +154,7 @@ fun formatMessageTime(timestamp: String): String {
 @Composable
 fun ConversationHeader(
     user: ChatUser,
+    matchMode: String,
     onBackClick: () -> Unit,
     onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -161,7 +162,10 @@ fun ConversationHeader(
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
     val textColor = if (isDarkTheme) DarkText else LightText
-    
+    val displayUser = getDisplayUser(
+        user = user,
+        matchMode = matchMode
+    )
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -195,7 +199,7 @@ fun ConversationHeader(
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
-                    model = user.getDisplayAvatarUrl(),
+                    model = displayUser.avatar,
                     contentDescription = user.fullName,
                     modifier = Modifier
                         .size(48.dp)
@@ -216,7 +220,7 @@ fun ConversationHeader(
             }
 
             Text(
-                text = URLDecoder.decode(user.fullName, "UTF-8"),
+                text = displayUser.fullName,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = textColor,
@@ -349,7 +353,7 @@ fun ConversationScreen(
                     .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Loading conversation...", color = textColor)
+                Text("Đang tải...", color = textColor)
             }
         }
 
@@ -467,6 +471,7 @@ private fun ConversationScreenContent(
 
         ConversationHeader(
             user = conversation.user,
+            matchMode = conversation.matchMode,
             onBackClick = onBackClick,
             onAvatarClick = onAvatarClick
         )
