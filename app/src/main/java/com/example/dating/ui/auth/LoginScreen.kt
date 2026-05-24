@@ -2,6 +2,7 @@ package com.example.dating.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,15 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,10 +37,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
-import com.example.dating.ui.theme.Gray700
+import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSecondaryText
+import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.SecondaryPurple
 
 @Composable
@@ -48,6 +54,11 @@ fun LoginScreen(
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     // Làm mới trạng thái khi vào màn hình đăng nhập
     LaunchedEffect(Unit) {
         authViewModel.resetState()
@@ -62,7 +73,7 @@ fun LoginScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(backgroundColor)
             .padding(horizontal = 28.dp, vertical = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -87,7 +98,7 @@ fun LoginScreen(
         Text(
             text = "Student Connect",
             style = MaterialTheme.typography.headlineLarge,
-            color = Black900,
+            color = textColor,
             textAlign = TextAlign.Center
         )
 
@@ -96,7 +107,7 @@ fun LoginScreen(
         Text(
             text = "Kết nối sinh viên",
             style = MaterialTheme.typography.titleLarge,
-            color = Gray700,
+            color = secondaryTextColor,
             textAlign = TextAlign.Center
         )
 
@@ -150,7 +161,7 @@ fun LoginScreen(
             Text(
                 text = "Chưa có tài khoản? ",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Gray700
+                color = secondaryTextColor
             )
             Text(
                 text = "Đăng ký ngay",
@@ -175,17 +186,30 @@ private fun LoginField(
     visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
     enabled: Boolean = true
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(leadingIcon, contentDescription = null, tint = Gray700) },
+        leadingIcon = { Icon(leadingIcon, contentDescription = null) },
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         singleLine = true,
         enabled = enabled,
         visualTransformation = visualTransformation,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = textColor,
+            unfocusedTextColor = textColor,
+            focusedPlaceholderColor = secondaryTextColor,
+            unfocusedPlaceholderColor = secondaryTextColor,
+            focusedLeadingIconColor = secondaryTextColor,
+            unfocusedLeadingIconColor = secondaryTextColor,
+            focusedBorderColor = BrandPink, // Thêm tuỳ chọn viền hồng khi focus
+        )
     )
 }
 

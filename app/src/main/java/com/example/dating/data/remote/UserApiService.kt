@@ -2,7 +2,9 @@ package com.example.dating.data.remote
 
 import com.example.dating.data.model.CreatePhotoRequest
 import com.example.dating.data.model.Photo
+import com.example.dating.data.model.UpdatePreferencesRequest
 import com.example.dating.data.model.User
+import com.example.dating.data.model.UserPreferences
 import com.example.dating.ui.chat.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -16,8 +18,8 @@ interface UserApiService {
 
     @PUT("api/users/preferences")
     suspend fun updatePreferences(
-        @Body body: Map<String, String>
-    ): ApiResponse<Any>
+        @Body body: UpdatePreferencesRequest
+    ): ApiResponse<UserPreferences>
 
     @POST("api/users/photos")
     suspend fun createPhoto(

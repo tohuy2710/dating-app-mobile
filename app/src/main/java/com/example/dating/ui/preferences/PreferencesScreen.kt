@@ -3,6 +3,7 @@ package com.example.dating.ui.preferences
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,10 +50,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.data.InterestsData.availableInterests
 import com.example.dating.ui.auth.AuthViewModel
 import com.example.dating.ui.auth.RegisterSharedViewModel
-import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
-import com.example.dating.ui.theme.Gray700
+import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSecondaryText
+import com.example.dating.ui.theme.DarkSurface
+import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightSurface
+import com.example.dating.ui.theme.LightText
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -61,6 +69,11 @@ fun PreferencesScreen(
     modifier: Modifier = Modifier,
     sharedViewModel: RegisterSharedViewModel
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     val viewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
     val predefinedInterests = availableInterests
     val selectedInterests = remember { mutableStateListOf<String>() }
@@ -76,7 +89,7 @@ fun PreferencesScreen(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .background(Color.White)
+            .background(backgroundColor)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -95,7 +108,7 @@ fun PreferencesScreen(
                 Icon(
                     imageVector = Icons.Outlined.ArrowBack,
                     contentDescription = "Back",
-                    tint = Black900,
+                    tint = textColor,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -104,7 +117,7 @@ fun PreferencesScreen(
                 text = "Sở thích",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Black900,
+                color = textColor,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 12.dp),
@@ -116,7 +129,7 @@ fun PreferencesScreen(
             text = "Chọn những sở thích mô tả đúng nhất về bạn",
             modifier = Modifier.fillMaxWidth(),
             style = MaterialTheme.typography.bodyLarge,
-            color = Gray700
+            color = secondaryTextColor
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -147,7 +160,7 @@ fun PreferencesScreen(
             modifier = Modifier.fillMaxWidth(),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Black900
+            color = textColor
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -156,7 +169,7 @@ fun PreferencesScreen(
             text = "Tôi muốn tìm",
             modifier = Modifier.fillMaxWidth(),
             fontWeight = FontWeight.Medium,
-            color = Gray700
+            color = secondaryTextColor
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -200,8 +213,15 @@ fun PreferencesScreen(
                 placeholder = { Text("Tuổi tối thiểu") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(18.dp),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
-                singleLine = true
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = textColor,
+                    unfocusedTextColor = textColor,
+                    focusedPlaceholderColor = secondaryTextColor,
+                    unfocusedPlaceholderColor = secondaryTextColor,
+                    focusedBorderColor = BrandPink
+                )
             )
 
             OutlinedTextField(
@@ -211,8 +231,15 @@ fun PreferencesScreen(
                 placeholder = { Text("Tuổi tối đa") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(18.dp),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
-                singleLine = true
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = textColor,
+                    unfocusedTextColor = textColor,
+                    focusedPlaceholderColor = secondaryTextColor,
+                    unfocusedPlaceholderColor = secondaryTextColor,
+                    focusedBorderColor = BrandPink
+                )
             )
         }
 
@@ -225,8 +252,15 @@ fun PreferencesScreen(
             placeholder = { Text("Khoảng cách tối đa (km)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(18.dp),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
-            singleLine = true
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = textColor,
+                unfocusedTextColor = textColor,
+                focusedPlaceholderColor = secondaryTextColor,
+                unfocusedPlaceholderColor = secondaryTextColor,
+                focusedBorderColor = BrandPink
+            )
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -336,7 +370,7 @@ fun PreferencesScreen(
                 color = MaterialTheme.colorScheme.error
             )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -357,14 +391,19 @@ fun InterestChip(
     gradientBrush: Brush,
     onClick: () -> Unit
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else Color.White
+    val textColor = if (isDarkTheme) DarkText else Color(0xFF1E1E1E)
+    val borderColor = if (isDarkTheme) Color.DarkGray else Color.LightGray
+
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .then(
                 if (isSelected) Modifier.background(gradientBrush)
                 else Modifier
-                    .background(Color.White)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                    .background(surfaceColor)
+                    .border(1.dp, borderColor, RoundedCornerShape(12.dp))
             )
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp),
@@ -372,7 +411,7 @@ fun InterestChip(
     ) {
         Text(
             text = text,
-            color = if (isSelected) Color.White else Black900,
+            color = if (isSelected) Color.White else textColor,
             fontSize = 15.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
@@ -387,20 +426,24 @@ private fun GenderChoiceButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else Color(0xFFF5F5F5)
+    val textColor = if (isDarkTheme) DarkSecondaryText else Color(0xFF5A5A5A)
+
     Box(
         modifier = modifier
             .height(52.dp)
             .clip(RoundedCornerShape(18.dp))
             .then(
                 if (selected) Modifier.background(gradientBrush)
-                else Modifier.background(Color(0xFFF5F5F5))
+                else Modifier.background(surfaceColor)
             )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (selected) Color.White else Gray700,
+            color = if (selected) Color.White else textColor,
             fontWeight = FontWeight.Bold
         )
     }

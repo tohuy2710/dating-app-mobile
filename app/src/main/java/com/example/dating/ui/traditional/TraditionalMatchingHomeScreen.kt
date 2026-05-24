@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,10 +39,13 @@ fun TraditionalMatchingHomeScreen(
     modifier: Modifier = Modifier,
     onMatchNowClick: () -> Unit = {},
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(White)
+            .background(backgroundColor)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -155,6 +159,9 @@ private fun MatchNowButton(onClick: () -> Unit) {
 
 @Composable
 private fun ActionRow() {
+    val isDarkTheme = isSystemInDarkTheme()
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     val actionItems = listOf(
         Icons.Default.Favorite to "Đã thích bạn",
         Icons.Default.Star to "Bạn đã thích",
@@ -174,7 +181,7 @@ private fun ActionRow() {
                     modifier = Modifier
                         .size(52.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF7561FF)),
+                        .background(SecondaryPurple),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -190,7 +197,7 @@ private fun ActionRow() {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF818181)
+                    color = secondaryTextColor
                 )
             }
         }
@@ -200,9 +207,7 @@ private fun ActionRow() {
 @Preview(showBackground = true)
 @Composable
 private fun PreviewScreen() {
-    MarsPhotosTheme {
-        Surface {
-            TraditionalMatchingHomeScreen()
-        }
+    Surface {
+        TraditionalMatchingHomeScreen()
     }
 }

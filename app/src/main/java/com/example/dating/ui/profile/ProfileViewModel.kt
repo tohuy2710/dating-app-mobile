@@ -83,14 +83,48 @@ class ProfileViewModel : ViewModel() {
 
             try {
 
-                repository.updateAnonymousInterests(
-                    interests.joinToString(",")
+                repository.updateAnonymousInterests(interests)
+                getCurrentUser()
+
+            } catch (e: Exception) {
+                android.util.Log.e(
+                    "PROFILE",
+                    "Update interests failed",
+                    e
+                )
+            }
+        }
+    }
+
+    fun addPhoto(
+        imageUrl: String
+    ) {
+
+        viewModelScope.launch {
+
+            try {
+                android.util.Log.d(
+                    "PROFILE",
+                    "Calling createPhoto"
+                )
+
+                repository.createPhoto(
+                    imageUrl = imageUrl
+                )
+
+                android.util.Log.d(
+                    "PROFILE",
+                    "createPhoto success"
                 )
 
                 getCurrentUser()
 
-            } catch (_: Exception) {
-
+            } catch (e: Exception) {
+                android.util.Log.e(
+                    "PROFILE",
+                    "createPhoto failed",
+                    e
+                )
             }
         }
     }

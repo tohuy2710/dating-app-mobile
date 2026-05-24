@@ -1,8 +1,13 @@
 package com.example.dating.ui.auth
 
 import android.content.Context
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,21 +32,25 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,22 +59,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import android.net.Uri
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.size
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.layout.ContentScale
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.dating.data.model.RegisterRequest
-import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
-import com.example.dating.ui.theme.Gray700
+import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSecondaryText
+import com.example.dating.ui.theme.DarkSurface
+import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightSurface
+import com.example.dating.ui.theme.LightText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -146,6 +153,12 @@ fun RegisterScreen(
     modifier: Modifier = Modifier,
     sharedViewModel: RegisterSharedViewModel
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val fullName = remember { mutableStateOf("") }
@@ -161,6 +174,7 @@ fun RegisterScreen(
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val isUploading = remember { mutableStateOf(false) }
     val avatarUrl = remember { mutableStateOf<String?>(null) }
+
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -185,7 +199,7 @@ fun RegisterScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(backgroundColor)
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -205,13 +219,13 @@ fun RegisterScreen(
                 Icon(
                     imageVector = Icons.Outlined.ArrowBack,
                     contentDescription = "Back",
-                    tint = Black900
+                    tint = textColor
                 )
             }
             Text(
                 text = "Đăng ký tài khoản",
                 style = MaterialTheme.typography.titleLarge,
-                color = Black900,
+                color = textColor,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 12.dp),
@@ -262,8 +276,7 @@ fun RegisterScreen(
             leadingIcon = {
                 Icon(
                     Icons.Outlined.DateRange,
-                    contentDescription = null,
-                    tint = Gray700
+                    contentDescription = null
                 )
             },
             isError = dateError.value != null,
@@ -277,7 +290,16 @@ fun RegisterScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             visualTransformation = DateVisualTransformation(),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900)
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = textColor,
+                unfocusedTextColor = textColor,
+                focusedPlaceholderColor = secondaryTextColor,
+                unfocusedPlaceholderColor = secondaryTextColor,
+                focusedLeadingIconColor = secondaryTextColor,
+                unfocusedLeadingIconColor = secondaryTextColor,
+                focusedBorderColor = BrandPink
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -290,8 +312,7 @@ fun RegisterScreen(
                 leadingIcon = {
                     Icon(
                         Icons.Outlined.Person,
-                        contentDescription = null,
-                        tint = Gray700
+                        contentDescription = null
                     )
                 },
                 modifier = Modifier
@@ -299,8 +320,14 @@ fun RegisterScreen(
                     .clickable { genderExpanded.value = !genderExpanded.value },
                 shape = RoundedCornerShape(18.dp),
                 readOnly = true,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900),
-                enabled = false
+                enabled = false,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = textColor,
+                    disabledPlaceholderColor = secondaryTextColor,
+                    disabledLeadingIconColor = secondaryTextColor,
+                    disabledBorderColor = if (isDarkTheme) Color.DarkGray else Color.LightGray
+                )
             )
 
             DropdownMenu(
@@ -335,7 +362,7 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF5F5F5))
+                .background(surfaceColor)
                 .padding(24.dp)
                 .clickable {
                     imagePicker.launch("image/*")
@@ -345,7 +372,7 @@ fun RegisterScreen(
 
             when {
                 isUploading.value -> {
-                    androidx.compose.material3.CircularProgressIndicator()
+                    CircularProgressIndicator(color = BrandPink)
                 }
 
                 avatarUrl.value != null -> {
@@ -364,11 +391,11 @@ fun RegisterScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("⬆", style = MaterialTheme.typography.headlineLarge, color = Gray700)
+                        Text("⬆", style = MaterialTheme.typography.headlineLarge, color = secondaryTextColor)
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("Ảnh đại diện", color = Gray700)
+                        Text("Ảnh đại diện", color = secondaryTextColor)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("PNG, JPG tối đa 10MB", color = Gray700)
+                        Text("PNG, JPG tối đa 10MB", color = secondaryTextColor)
                     }
                 }
             }
@@ -485,16 +512,29 @@ private fun RegisterField(
     modifier: Modifier = Modifier,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(leadingIcon, contentDescription = null, tint = Gray700) },
+        leadingIcon = { Icon(leadingIcon, contentDescription = null) },
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         singleLine = true,
         visualTransformation = visualTransformation,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Black900)
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = textColor),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = textColor,
+            unfocusedTextColor = textColor,
+            focusedPlaceholderColor = secondaryTextColor,
+            unfocusedPlaceholderColor = secondaryTextColor,
+            focusedLeadingIconColor = secondaryTextColor,
+            unfocusedLeadingIconColor = secondaryTextColor,
+            focusedBorderColor = BrandPink
+        )
     )
 }
 

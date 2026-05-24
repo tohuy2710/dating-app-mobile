@@ -87,6 +87,7 @@ data class UserPhoto(
     val createdAt: String? = null
 )
 
+@Serializable
 data class Photo(
     val photo_id: Int,
     val user_id: Int,
@@ -95,10 +96,20 @@ data class Photo(
     val display_order: Int?
 )
 
+@Serializable
 data class CreatePhotoRequest(
     val image_url: String,
     val is_primary: Boolean = false,
     val display_order: Int? = null
+)
+
+@Serializable
+data class UpdatePreferencesRequest(
+    val target_gender: String? = null,
+    val min_age: Int? = null,
+    val max_age: Int? = null,
+    val max_distance_km: Int? = null,
+    val anonymous_interests: List<String>? = null
 )
 
 data class RegisterUiState(

@@ -5,9 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,12 +25,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,32 +45,32 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.dating.R
-import com.example.dating.ui.theme.Black900
-import com.example.dating.ui.theme.BrandPink
-import com.example.dating.ui.theme.BrandPinkDark
-import com.example.dating.ui.theme.Gray700
-import com.example.dating.ui.theme.SecondaryPurple
-import com.example.dating.ui.theme.White
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.IconButton
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.dating.R
 import com.example.dating.data.model.User
 import com.example.dating.data.model.UserPhoto
+import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.BrandPinkDark
+import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSecondaryText
+import com.example.dating.ui.theme.DarkSurface
+import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightSurface
+import com.example.dating.ui.theme.LightText
+import com.example.dating.ui.theme.SecondaryPurple
+import com.example.dating.ui.theme.White
 
 @Composable
 fun ProfileScreen(
@@ -79,6 +86,9 @@ fun ProfileScreen(
     val scrollState = rememberScrollState()
     var offsetX by remember { mutableStateOf(0f) }
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+
     if (currentUser == null) {
         EmptyState(onRetry = { viewModel.loadNextPage() })
         return
@@ -87,7 +97,7 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F7F7))
+            .background(backgroundColor)
             .verticalScroll(scrollState)
     ) {
 
@@ -263,13 +273,17 @@ private fun FloatingActionButton(
 
 @Composable
 private fun ProfileCard(user: User) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(White)
+            .background(surfaceColor)
             .padding(16.dp)
     ) {
 
@@ -288,7 +302,7 @@ private fun ProfileCard(user: User) {
 
                 Text(
                     text = user.birthDate ?: "Không rõ ngày sinh",
-                    color = Gray700,
+                    color = secondaryTextColor,
                     fontSize = 13.sp
                 )
 
@@ -296,7 +310,7 @@ private fun ProfileCard(user: User) {
 
                 Text(
                     text = user.bio ?: "Chưa có giới thiệu",
-                    color = Black900,
+                    color = textColor,
                     fontSize = 14.sp
                 )
             }
@@ -314,13 +328,15 @@ private fun InterestChips(interests: List<String>) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipRow(labels: List<String>) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(White)
+            .background(surfaceColor)
             .padding(16.dp)
     ) {
 
@@ -391,16 +407,25 @@ private fun GalleryGrid(photos: List<UserPhoto>) {
 
 @Composable
 fun EmptyState(onRetry: () -> Unit) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Không có người dùng nào phù hợp")
+            Text(
+                text = "Không có người dùng nào phù hợp",
+                color = textColor
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            androidx.compose.material3.Button(onClick = onRetry) {
+            Button(onClick = onRetry) {
                 Text("Tải lại")
             }
         }

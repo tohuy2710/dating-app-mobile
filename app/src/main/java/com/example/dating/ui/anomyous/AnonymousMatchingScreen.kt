@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Psychology
@@ -33,17 +33,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,9 +53,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
+import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSecondaryText
+import com.example.dating.ui.theme.DarkSurface
+import com.example.dating.ui.theme.DarkText
+import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
+import com.example.dating.ui.theme.LightSurface
+import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.MarsPhotosTheme
 import com.example.dating.ui.theme.White
-import kotlinx.coroutines.delay
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -75,10 +76,16 @@ fun AnonymousMatchingScreen(
     val uiState = viewModel.anonymousUiState
     val remainingSeconds = viewModel.remainingSeconds
 
+    val isDarkTheme = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(White)
+            .background(backgroundColor)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -93,7 +100,7 @@ fun AnonymousMatchingScreen(
             text = "Kết nối ẩn danh",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = textColor
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -187,7 +194,8 @@ fun AnonymousMatchingScreen(
                     Text(
                         text = "Đang tìm kiếm...",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
                     )
                 }
             },
@@ -202,7 +210,7 @@ fun AnonymousMatchingScreen(
                     Text(
                         text = "Đang tìm người phù hợp với bạn",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
+                        color = secondaryTextColor
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -223,7 +231,7 @@ fun AnonymousMatchingScreen(
             },
 
             shape = RoundedCornerShape(28.dp),
-            containerColor = White
+            containerColor = surfaceColor
         )
     }
 
@@ -275,7 +283,8 @@ fun AnonymousMatchingScreen(
                 Text(
                     text = "Đã tìm thấy người phù hợp 🎉",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
                 )
             },
 
@@ -285,7 +294,7 @@ fun AnonymousMatchingScreen(
 
                     Text(
                         text = "Hai bạn có nhiều sở thích tương đồng.",
-                        color = Color.Gray
+                        color = secondaryTextColor
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -299,7 +308,7 @@ fun AnonymousMatchingScreen(
             },
 
             shape = RoundedCornerShape(28.dp),
-            containerColor = White
+            containerColor = surfaceColor
         )
     }
 
@@ -326,12 +335,20 @@ fun AnonymousMatchingScreen(
             },
 
             title = {
-                Text("Không tìm thấy ai")
+                Text(
+                    text = "Không tìm thấy ai",
+                    color = textColor
+                )
             },
 
             text = {
-                Text("Hiện chưa có người phù hợp. Hãy thử lại sau.")
-            }
+                Text(
+                    text = "Hiện chưa có người phù hợp. Hãy thử lại sau.",
+                    color = secondaryTextColor
+                )
+            },
+
+            containerColor = surfaceColor
         )
     }
 }
@@ -339,6 +356,10 @@ fun AnonymousMatchingScreen(
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun AnimatedAnonymousCard() {
+
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
 
     val infinite = rememberInfiniteTransition(label = "anonymous")
 
@@ -396,7 +417,7 @@ private fun AnimatedAnonymousCard() {
                 }
                 .padding(stroke)
                 .clip(RoundedCornerShape(radius))
-                .background(Color(0xFFF8F5FF)),
+                .background(surfaceColor),
             contentAlignment = Alignment.Center
         ) {
 
@@ -432,7 +453,8 @@ private fun AnimatedAnonymousCard() {
                 Text(
                     text = "Ẩn danh tuyệt đối",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
                 )
             }
         }
@@ -469,6 +491,9 @@ private fun FeatureItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -478,7 +503,7 @@ private fun FeatureItem(
             modifier = Modifier
                 .size(58.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFF4EEFF)),
+                .background(surfaceColor),
             contentAlignment = Alignment.Center
         ) {
 
@@ -495,13 +520,15 @@ private fun FeatureItem(
         Text(
             text = title,
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF818181)
+            color = secondaryTextColor
         )
     }
 }
 
 @Composable
 private fun RotatingAnonymousIcon() {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
 
     val infinite = rememberInfiniteTransition(label = "rotate")
 
@@ -524,7 +551,7 @@ private fun RotatingAnonymousIcon() {
         Surface(
             modifier = Modifier.size(84.dp),
             shape = CircleShape,
-            color = Color(0xFFF4EEFF)
+            color = surfaceColor
         ) {
 
             Box(
