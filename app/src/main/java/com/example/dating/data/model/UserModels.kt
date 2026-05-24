@@ -127,3 +127,14 @@ data class RegisterUiState(
     var maxAge: Int? = null,
     var maxDistanceKm: Int? = null
 )
+
+@Serializable
+data class UpdateProfileRequest(
+    @SerialName("full_name")
+    val fullName: String? = null,
+
+    @SerialName("birth_date")
+    val birthDate: String? = null,
+
+    val bio: String? = null
+)

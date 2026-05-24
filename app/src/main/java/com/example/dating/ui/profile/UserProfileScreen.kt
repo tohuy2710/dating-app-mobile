@@ -166,8 +166,24 @@ private fun UserProfileContent(
 
     var isEditing by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf(user.fullName) }
-    var age by remember { mutableStateOf(user.birthDate ?: "") }
     var bio by remember { mutableStateOf(user.bio ?: "") }
+
+    // Xử lý chuyển đổi ngày sinh từ DB (yyyy-MM-dd) sang UI (dd/MM/yyyy)
+    var age by remember(user.birthDate) {
+        val displayDate = try {
+            if (user.birthDate != null && user.birthDate.contains("-")) {
+                val inFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val outFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val parsedDate = inFormat.parse(user.birthDate)
+                parsedDate?.let { outFormat.format(it) } ?: user.birthDate
+            } else {
+                user.birthDate ?: ""
+            }
+        } catch (e: Exception) {
+            user.birthDate ?: ""
+        }
+        mutableStateOf(displayDate)
+    }
 
     var showPhotoDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -185,9 +201,7 @@ private fun UserProfileContent(
             .verticalScroll(scrollState)
             .padding(bottom = 24.dp)
     ) {
-
         Box(modifier = Modifier.fillMaxWidth()) {
-
             UserHeroImage(
                 avatarUrl = user.avatarUrl,
                 onSettingsClick = onSettingsClick
@@ -196,6 +210,10 @@ private fun UserProfileContent(
             UserActionButtons(
                 isEditing = isEditing,
                 onEditToggle = {
+                    // Nếu đang ở chế độ sửa và nhấn tick -> Lưu dữ liệu lên backend
+                    if (isEditing) {
+                        viewModel.updateProfile(name, age, bio)
+                    }
                     isEditing = !isEditing
                 },
                 modifier = Modifier
@@ -250,24 +268,6 @@ private fun UserProfileContent(
             onComplete = { imageUrl ->
                 viewModel.addPhoto(imageUrl = imageUrl)
                 showPhotoDialog = false
-            }
-        )
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Account?") },
-            text = { Text("This action cannot be undone.") },
-            confirmButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Delete", color = Color.Red)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
-                }
             }
         )
     }
@@ -490,6 +490,7 @@ private fun UserInterestChips(
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)
@@ -509,7 +510,7 @@ private fun UserInterestChips(
             TextButton(onClick = onEditInterestsClick) {
                 Text(
                     "Chỉnh sửa",
-                    color = BrandPink
+                    color = secondaryTextColor
                 )
             }
         }
@@ -551,6 +552,7 @@ private fun UserGalleryGrid(
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)
@@ -570,7 +572,7 @@ private fun UserGalleryGrid(
             TextButton(onClick = onAddPhotoClick) {
                 Text(
                     "Thêm ảnh",
-                    color = BrandPink
+                    color = secondaryTextColor
                 )
             }
         }

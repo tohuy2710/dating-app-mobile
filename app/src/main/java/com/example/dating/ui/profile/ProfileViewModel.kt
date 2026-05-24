@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 sealed class ProfileUiState {
 
@@ -125,6 +127,34 @@ class ProfileViewModel : ViewModel() {
                     "createPhoto failed",
                     e
                 )
+            }
+        }
+    }
+
+    fun updateProfile(name: String, birthDate: String, bio: String) {
+        viewModelScope.launch {
+            try {
+                // Đổi định dạng ngày từ dd/MM/yyyy (UI) sang yyyy-MM-dd (Database)
+                val formattedDate = try {
+                    if (birthDate.contains("/")) {
+                        val inputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val date = inputFormat.parse(birthDate)
+                        date?.let { outputFormat.format(it) } ?: birthDate
+                    } else {
+                        birthDate
+                    }
+                } catch (e: Exception) {
+                    birthDate
+                }
+
+                repository.updateProfile(name, formattedDate, bio)
+
+                // Gọi API lấy lại thông tin user mới nhất sau khi update thành công
+                getCurrentUser()
+
+            } catch (e: Exception) {
+                android.util.Log.e("PROFILE", "Update profile failed", e)
             }
         }
     }

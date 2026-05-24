@@ -2,6 +2,7 @@ package com.example.dating.data.repository
 
 import com.example.dating.data.model.CreatePhotoRequest
 import com.example.dating.data.model.UpdatePreferencesRequest
+import com.example.dating.data.model.UpdateProfileRequest
 import com.example.dating.data.model.User
 import com.example.dating.data.remote.UserApiService
 
@@ -28,6 +29,16 @@ class UserRepository(
         userApiService.createPhoto(
             CreatePhotoRequest(
                 image_url = imageUrl
+            )
+        )
+    }
+
+    suspend fun updateProfile(name: String, birthDate: String, bio: String) {
+        userApiService.updateProfile(
+            UpdateProfileRequest(
+                fullName = name,
+                birthDate = birthDate,
+                bio = bio
             )
         )
     }
