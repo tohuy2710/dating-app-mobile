@@ -15,11 +15,14 @@ import com.example.dating.ui.theme.BrandPink
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBackClick: () -> Unit) {
+fun SettingsScreen(
+    onBackClick: () -> Unit,
+    onLogoutClick: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text("Cài đặt") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -29,17 +32,17 @@ fun SettingsScreen(onBackClick: () -> Unit) {
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            SettingItem(Icons.Default.Notifications, "Notifications")
-            SettingItem(Icons.Default.Security, "Privacy & Security")
-            SettingItem(Icons.Default.Visibility, "Discovery Settings")
+            SettingItem(Icons.Default.Notifications, "Thông báo")
+            SettingItem(Icons.Default.Security, "Quyền riêng tư và bảo mật")
+            SettingItem(Icons.Default.Visibility, "Cài đặt khám phá")
             
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { /* Logout */ },
+                onClick = onLogoutClick,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = BrandPink)
             ) {
-                Text("Log Out")
+                Text("Đăng xuất")
             }
         }
     }

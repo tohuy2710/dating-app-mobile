@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
@@ -37,7 +36,7 @@ import com.example.dating.ui.theme.*
 @Composable
 fun TraditionalMatchingHomeScreen(
     modifier: Modifier = Modifier,
-    onMatchNowClick: () -> Unit = {}
+    onMatchNowClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier

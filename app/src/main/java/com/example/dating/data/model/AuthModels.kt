@@ -39,6 +39,22 @@ data class LoginResponse(
 )
 
 @Serializable
+data class RegisterRequest(
+    val email: String,
+    val password: String,
+    @SerialName("full_name") val full_name: String,
+    @SerialName("birth_date") val birth_date: String,
+    val gender: String,
+    val bio: String?,
+    val image_url: String?,
+    val anonymous_interests: List<String>? = null,
+    val min_age: Int? = null,
+    val max_age: Int? = null,
+    val target_gender: String? = null,
+    val max_distance_km: Int? = null,
+)
+
+@Serializable
 data class AuthUser(
     @SerialName("user_id")
     val userId: Int,

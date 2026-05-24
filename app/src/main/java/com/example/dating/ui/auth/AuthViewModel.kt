@@ -29,6 +29,7 @@ import com.example.dating.DatingApplication
 import com.example.dating.core.auth.JwtUtils
 import com.example.dating.core.auth.TokenManager
 import com.example.dating.data.model.LoginResponse
+import com.example.dating.data.model.RegisterRequest
 import com.example.dating.data.repository.AuthRepository
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -116,6 +117,24 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun register(
+        request: RegisterRequest,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val result = authRepository.register(request)
+
+                authRepository.saveToken(result.token)
+                TokenManager.setToken(result.token)
+
+                onResult(true, null)
+            } catch (e: Exception) {
+                onResult(false, e.message)
+            }
+        }
+    }
+
     /**
      * Resets the login state to Idle
      */
@@ -132,6 +151,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             emailInput = ""
             passwordInput = ""
             loginUiState = LoginUiState.Idle
+            TokenManager.clearToken()
         }
     }
 

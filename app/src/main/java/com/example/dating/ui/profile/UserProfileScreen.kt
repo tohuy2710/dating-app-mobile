@@ -469,28 +469,6 @@ private fun UserPersonalInfoCard(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Icon(
-                Icons.Default.LocationOn,
-                contentDescription = null,
-                tint = SecondaryPurple,
-                modifier = Modifier.size(18.dp)
-            )
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Text(
-                text = gender,
-                color = Gray700,
-                fontSize = 14.sp
-            )
-        }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(

@@ -20,6 +20,7 @@ import com.example.dating.data.local.TokenDao
 import com.example.dating.data.local.TokenEntity
 import com.example.dating.data.model.LoginRequest
 import com.example.dating.data.model.LoginResponse
+import com.example.dating.data.model.RegisterRequest
 import com.example.dating.data.remote.AuthApiService
 
 /**
@@ -27,6 +28,8 @@ import com.example.dating.data.remote.AuthApiService
  */
 interface AuthRepository {
     suspend fun login(email: String, password: String): LoginResponse
+
+    suspend fun register(request: RegisterRequest): LoginResponse
 
     suspend fun checkToken(): Boolean
 
@@ -52,6 +55,12 @@ class NetworkAuthRepository(
 
         return authApiService
             .login(LoginRequest(email, password))
+            .data
+    }
+
+    override suspend fun register(request: RegisterRequest): LoginResponse {
+        return authApiService
+            .register(request)
             .data
     }
 

@@ -86,3 +86,33 @@ data class UserPhoto(
     @SerialName("created_at")
     val createdAt: String? = null
 )
+
+data class Photo(
+    val photo_id: Int,
+    val user_id: Int,
+    val image_url: String,
+    val is_primary: Boolean,
+    val display_order: Int?
+)
+
+data class CreatePhotoRequest(
+    val image_url: String,
+    val is_primary: Boolean = false,
+    val display_order: Int? = null
+)
+
+data class RegisterUiState(
+    var email: String = "",
+    var password: String = "",
+    var fullName: String = "",
+    var birthDate: String = "",
+    var gender: String = "",
+    var bio: String = "",
+    var imageUrl: String? = null,
+
+    var interests: List<String> = emptyList(),
+    var targetGender: String? = null,
+    var minAge: Int? = null,
+    var maxAge: Int? = null,
+    var maxDistanceKm: Int? = null
+)

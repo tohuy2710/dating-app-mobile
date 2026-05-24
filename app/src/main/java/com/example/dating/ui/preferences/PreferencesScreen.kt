@@ -44,6 +44,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dating.data.InterestsData.availableInterests
+import com.example.dating.ui.auth.AuthViewModel
+import com.example.dating.ui.auth.RegisterSharedViewModel
 import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
@@ -54,21 +58,17 @@ import com.example.dating.ui.theme.Gray700
 fun PreferencesScreen(
     onBackClick: () -> Unit,
     onComplete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedViewModel: RegisterSharedViewModel
 ) {
-
-    val predefinedInterests = listOf(
-        "Chơi thể thao", "Du lịch", "Đọc sách", "Nghe nhạc", "Xem phim",
-        "Nấu ăn", "Chụp ảnh", "Chơi game", "Vẽ tranh", "Khiêu vũ",
-        "Thời trang", "Thiên nhiên", "Thú cưng", "Cà phê", "Lập trình",
-        "Học ngoại ngữ", "Tình nguyện", "Yoga", "Leo núi", "Làm vườn"
-    )
-
+    val viewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+    val predefinedInterests = availableInterests
     val selectedInterests = remember { mutableStateListOf<String>() }
     var targetGender by remember { mutableStateOf<String?>(null) }
     var minAge by remember { mutableStateOf("") }
     var maxAge by remember { mutableStateOf("") }
     var maxDistance by remember { mutableStateOf("") }
+    val error = remember { mutableStateOf<String?>(null) }
 
     val gradientBrush = Brush.horizontalGradient(listOf(BrandPinkDark, BrandPink))
 
@@ -180,6 +180,14 @@ fun PreferencesScreen(
                 onClick = { targetGender = "Nữ" },
                 modifier = Modifier.weight(1f)
             )
+
+            GenderChoiceButton(
+                text = "Khác",
+                selected = targetGender == "Khác",
+                gradientBrush = gradientBrush,
+                onClick = { targetGender = "Khác" },
+                modifier = Modifier.weight(1f)
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -224,7 +232,79 @@ fun PreferencesScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         Button(
-            onClick = onComplete,
+            onClick = {
+
+                when {
+
+                    selectedInterests.isEmpty() -> {
+                        error.value = "Vui lòng chọn ít nhất 1 sở thích"
+                    }
+
+                    targetGender == null -> {
+                        error.value = "Vui lòng chọn giới tính mong muốn"
+                    }
+
+                    minAge.isBlank() -> {
+                        error.value = "Vui lòng nhập tuổi tối thiểu"
+                    }
+
+                    maxAge.isBlank() -> {
+                        error.value = "Vui lòng nhập tuổi tối đa"
+                    }
+
+                    maxDistance.isBlank() -> {
+                        error.value = "Vui lòng nhập khoảng cách tối đa"
+                    }
+
+                    minAge.toIntOrNull() == null -> {
+                        error.value = "Tuổi tối thiểu không hợp lệ"
+                    }
+
+                    maxAge.toIntOrNull() == null -> {
+                        error.value = "Tuổi tối đa không hợp lệ"
+                    }
+
+                    maxDistance.toIntOrNull() == null -> {
+                        error.value = "Khoảng cách không hợp lệ"
+                    }
+
+                    minAge.toInt() < 18 -> {
+                        error.value = "Tuổi tối thiểu phải từ 18"
+                    }
+
+                    maxAge.toInt() > 100 -> {
+                        error.value = "Tuổi tối đa không hợp lệ"
+                    }
+
+                    minAge.toInt() > maxAge.toInt() -> {
+                        error.value = "Tuổi tối thiểu phải nhỏ hơn tuổi tối đa"
+                    }
+
+                    else -> {
+
+                        error.value = null
+
+                        sharedViewModel.setPreferences(
+                            interests = selectedInterests.toList(),
+                            targetGender = mapGenderToApi(targetGender),
+                            minAge = minAge.toIntOrNull(),
+                            maxAge = maxAge.toIntOrNull(),
+                            maxDistanceKm = maxDistance.toIntOrNull()
+                        )
+
+                        val request = sharedViewModel.toRegisterRequest()
+
+                        viewModel.register(request) { success, message ->
+
+                            if (success) {
+                                onComplete()
+                            } else {
+                                error.value = message ?: "Đăng ký thất bại"
+                            }
+                        }
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(68.dp),
@@ -247,8 +327,26 @@ fun PreferencesScreen(
                 )
             }
         }
+
+        error.value?.let {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+fun mapGenderToApi(value: String?): String? {
+    return when (value) {
+        "Nam" -> "male"
+        "Nữ" -> "female"
+        "Khác" -> "other"
+        else -> null
     }
 }
 

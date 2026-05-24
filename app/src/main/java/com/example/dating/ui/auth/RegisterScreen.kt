@@ -1,5 +1,6 @@
 package com.example.dating.ui.auth
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,13 +48,29 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.size
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.dating.data.model.RegisterRequest
 import com.example.dating.ui.theme.Black900
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
-import com.example.dating.ui.theme.BorderGray
 import com.example.dating.ui.theme.Gray700
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okio.source
+import org.json.JSONObject
 
 class DateVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -125,20 +142,45 @@ fun validateDateInput(digits: String): String? {
 @Composable
 fun RegisterScreen(
     onBackClick: () -> Unit,
-    onRegisterSuccess: () -> Unit,
-    modifier: Modifier = Modifier
+    onNextPage: () -> Unit,
+    modifier: Modifier = Modifier,
+    sharedViewModel: RegisterSharedViewModel
 ) {
-    val username = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val fullName = remember { mutableStateOf("") }
     val dateDigits = remember { mutableStateOf("") }
     val dateError = remember { mutableStateOf<String?>(null) }
     val gender = remember { mutableStateOf("") }
-    val school = remember { mutableStateOf("") }
     val genderExpanded = remember { mutableStateOf(false) }
-    val selectedImagePath = remember { mutableStateOf<String?>(null) }
+    val genderOptions = listOf("male", "female", "other")
+    val bio = remember { mutableStateOf("") }
+    val error = remember { mutableStateOf<String?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
+    val isUploading = remember { mutableStateOf(false) }
+    val avatarUrl = remember { mutableStateOf<String?>(null) }
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri.value = uri
 
-    val genderOptions = listOf("Nam", "Nữ", "Khác")
+            scope.launch {
+                try {
+                    isUploading.value = true
+                    val url = uploadToCloudinary(uri, context)
+                    avatarUrl.value = url
+                } catch (e: Exception) {
+                    error.value = e.message
+                } finally {
+                    isUploading.value = false
+                }
+            }
+        }
+    }
+
 
     Column(
         modifier = modifier
@@ -178,9 +220,9 @@ fun RegisterScreen(
         }
 
         RegisterField(
-            value = username.value,
-            onValueChange = { username.value = it },
-            placeholder = "Tên đăng nhập",
+            value = email.value,
+            onValueChange = { email.value = it },
+            placeholder = "Email",
             leadingIcon = Icons.Outlined.AccountCircle
         )
 
@@ -268,7 +310,7 @@ fun RegisterScreen(
             ) {
                 genderOptions.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { Text(genderLabel(option)) },
                         onClick = {
                             gender.value = option
                             genderExpanded.value = false
@@ -281,9 +323,9 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         RegisterField(
-            value = school.value,
-            onValueChange = { school.value = it },
-            placeholder = "Trường đang theo học",
+            value = bio.value,
+            onValueChange = { bio.value = it },
+            placeholder = "Giới thiệu bản thân (bio)",
             leadingIcon = Icons.Outlined.Info
         )
 
@@ -295,45 +337,82 @@ fun RegisterScreen(
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xFFF5F5F5))
                 .padding(24.dp)
-                .clickable { /* Handle image selection */ },
+                .clickable {
+                    imagePicker.launch("image/*")
+                },
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "⬆",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Gray700,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Tải ảnh thẻ sinh viên",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Gray700,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "PNG, JPG tối đa 10MB",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Gray700,
-                    textAlign = TextAlign.Center
-                )
+
+            when {
+                isUploading.value -> {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+
+                avatarUrl.value != null -> {
+                    AsyncImage(
+                        model = avatarUrl.value,
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                else -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("⬆", style = MaterialTheme.typography.headlineLarge, color = Gray700)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Ảnh đại diện", color = Gray700)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("PNG, JPG tối đa 10MB", color = Gray700)
+                    }
+                }
             }
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
         RegisterButton(
-            onClick = onRegisterSuccess,
+            onClick = {
+                when {
+                    email.value.isBlank() -> error.value = "Email không được để trống"
+                    password.value.length < 6 -> error.value = "Mật khẩu ít nhất 6 ký tự"
+                    fullName.value.isBlank() -> error.value = "Tên không được để trống"
+                    gender.value.isBlank() -> error.value = "Chưa chọn giới tính"
+                    dateError.value != null -> error.value = "Ngày sinh không hợp lệ"
+                    avatarUrl.value == null -> error.value = "Vui lòng chọn ảnh đại diện"
+                    else -> {
+                        error.value = null
+                        sharedViewModel.setBasicInfo(
+                            email = email.value,
+                            password = password.value,
+                            fullName = fullName.value,
+                            birthDate = formatBirthDate(dateDigits.value),
+                            gender = gender.value,
+                            bio = bio.value,
+                            imageUrl = avatarUrl.value
+                        )
+                        onNextPage()
+                    }
+                }
+            },
             text = "Tiếp theo"
         )
+
+        error.value?.let {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
+
 fun shouldBlockDigit(digits: String): Boolean {
 
     if (digits.length >= 1 && digits[0].digitToInt() > 3) return true
@@ -342,6 +421,60 @@ fun shouldBlockDigit(digits: String): Boolean {
 
     return false
 }
+
+fun formatBirthDate(digits: String): String {
+    if (digits.length != 8) return digits
+    return "${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4, 8)}"
+}
+
+fun genderLabel(value: String): String {
+    return when (value) {
+        "male" -> "Nam"
+        "female" -> "Nữ"
+        "other" -> "Khác"
+        else -> ""
+    }
+}
+
+suspend fun uploadToCloudinary(uri: Uri, context: Context): String =
+    withContext(Dispatchers.IO) {
+
+        val inputStream = context.contentResolver.openInputStream(uri)!!
+
+        val requestBody = object : okhttp3.RequestBody() {
+            override fun contentType() = "image/*".toMediaTypeOrNull()
+
+            override fun writeTo(sink: okio.BufferedSink) {
+                inputStream.source().use { source ->
+                    sink.writeAll(source)
+                }
+            }
+        }
+
+        val request = okhttp3.MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", "image.jpg", requestBody)
+            .addFormDataPart("upload_preset", "dating_app")
+            .build()
+
+        val requestFinal = okhttp3.Request.Builder()
+            .url("https://api.cloudinary.com/v1_1/df08peayk/image/upload")
+            .post(request)
+            .build()
+
+        val response = OkHttpClient().newCall(requestFinal).execute()
+        val bodyString = response.body?.string() ?: ""
+
+        Log.d("CLOUDINARY", bodyString)
+
+        val json = JSONObject(bodyString)
+
+        if (json.has("error")) {
+            throw Exception(json.getJSONObject("error").optString("message"))
+        }
+
+        json.getString("secure_url")
+    }
 
 @Composable
 private fun RegisterField(

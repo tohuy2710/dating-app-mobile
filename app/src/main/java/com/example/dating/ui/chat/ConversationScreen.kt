@@ -43,7 +43,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Send
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -334,7 +333,8 @@ fun ConversationScreen(
     onBackClick: () -> Unit,
     onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ConversationViewModel = viewModel()
+    viewModel: ConversationViewModel = viewModel(),
+    currentUserId: Int?
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
@@ -365,7 +365,8 @@ fun ConversationScreen(
                     viewModel.loadMoreMessages()
                 },
                 isLoadingMore = viewModel.isLoadingMoreMessages(),
-                modifier = modifier
+                modifier = modifier,
+                currentUserId = currentUserId
             )
         }
 
@@ -410,7 +411,7 @@ private fun ConversationScreenContent(
     onAvatarClick: () -> Unit,
     onSendMessage: (String) -> Unit,
     onLoadMoreMessages: () -> Unit = {},
-    currentUserId: Int = 1,
+    currentUserId: Int?,
     isLoadingMore: Boolean = false,
     modifier: Modifier = Modifier
 ) {

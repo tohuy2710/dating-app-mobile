@@ -20,12 +20,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.dating.ui.auth.AuthViewModel
 import com.example.dating.ui.chat.ChatOptionsScreen
 import com.example.dating.ui.chat.ChatScreen
 import com.example.dating.ui.chat.ConversationScreen
 import com.example.dating.ui.profile.InterestsSelectionScreen
 import com.example.dating.ui.profile.ProfileScreen
-import com.example.dating.ui.profile.ProfileUiState
 import com.example.dating.ui.profile.ProfileViewModel
 import com.example.dating.ui.profile.SettingsScreen
 import com.example.dating.ui.profile.UserProfileScreen
@@ -35,7 +35,9 @@ import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    initialMatchId: Int? = null
+    initialMatchId: Int? = null,
+    onLogout: () -> Unit,
+    currentUserId: Int?
 ) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -104,6 +106,7 @@ fun AppNavHost(
             composable(Screen.Chat.route) {
 
                 ChatScreen(
+                    currentUserId = currentUserId,
                     onConversationSelected = { conversation ->
 
                         navController.navigate(
@@ -139,6 +142,7 @@ fun AppNavHost(
                 if (matchId != null) {
 
                     ConversationScreen(
+                        currentUserId = currentUserId,
                         matchId = matchId,
                         onBackClick = {
                             navController.popBackStack()
@@ -179,7 +183,15 @@ fun AppNavHost(
             }
 
             composable(Screen.Settings.route) {
-                SettingsScreen(onBackClick = { navController.popBackStack() })
+                val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+
+                SettingsScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onLogoutClick = {
+                        authViewModel.logout()
+                        onLogout()
+                    }
+                )
             }
 
             composable(Screen.EditInterests.route) { backStackEntry ->

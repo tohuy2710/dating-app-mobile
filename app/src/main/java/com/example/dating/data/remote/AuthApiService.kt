@@ -19,6 +19,7 @@ package com.example.dating.data.remote
 import com.example.dating.ui.chat.ApiResponse
 import com.example.dating.data.model.LoginRequest
 import com.example.dating.data.model.LoginResponse
+import com.example.dating.data.model.RegisterRequest
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -28,6 +29,11 @@ import retrofit2.http.POST
 interface AuthApiService {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): ApiResponse<LoginResponse>
+
+    @POST("api/auth/register")
+    suspend fun register(
+        @Body request: RegisterRequest
+    ): ApiResponse<LoginResponse>
 
     @POST("api/auth/token-checking")
     suspend fun checkToken(): ApiResponse<Boolean>

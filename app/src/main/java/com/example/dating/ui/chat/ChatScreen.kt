@@ -31,13 +31,13 @@ import com.example.dating.ui.theme.DarkSecondaryText
 import com.example.dating.ui.theme.LightBackground
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.LightSecondaryText
-import com.example.dating.ui.theme.BorderGray
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
     modifier: Modifier = Modifier,
-    onConversationSelected: (Conversation) -> Unit = {}
+    onConversationSelected: (Conversation) -> Unit = {},
+    currentUserId: Int?
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground

@@ -13,12 +13,21 @@ fun AppRoot(
     authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory),
     initialMatchId: Int? = null
 ) {
-    var isLoggedIn by remember { mutableStateOf<Boolean?>(null) }
-    var userId by remember { mutableStateOf<Int?>(null) }
+
+    var isLoggedIn by remember {
+        mutableStateOf<Boolean?>(null)
+    }
+
+    var userId by remember {
+        mutableStateOf<Int?>(null)
+    }
 
     LaunchedEffect(Unit) {
+
         authViewModel.checkAuthStatus { isAuth, id ->
+
             isLoggedIn = isAuth
+
             if (isAuth) {
                 userId = id
             }
@@ -28,29 +37,53 @@ fun AppRoot(
     LaunchedEffect(isLoggedIn, userId) {
 
         if (isLoggedIn == true && userId != null) {
-
             SocketManager.connect(userId!!)
         }
     }
 
-    val authNavController = rememberNavController()
-    val mainNavController = rememberNavController()
+    key(isLoggedIn) {
 
-    if (isLoggedIn == null) {
-        return
-    }
+        val authNavController = rememberNavController()
 
-    if (isLoggedIn == false) {
-        AuthNavHost(
-            navController = authNavController,
-            onAuthSuccess = {
-                isLoggedIn = true
+        val mainNavController = rememberNavController()
+
+        when (isLoggedIn) {
+
+            null -> {
+                // loading state
             }
-        )
-    } else {
-        AppNavHost(
-            navController = mainNavController,
-            initialMatchId = initialMatchId
-        )
+
+            false -> {
+
+                AuthNavHost(
+                    navController = authNavController,
+                    onAuthSuccess = {
+
+                        authViewModel.checkAuthStatus { _, id ->
+
+                            userId = id
+                            isLoggedIn = true
+                        }
+                    }
+                )
+            }
+
+            true -> {
+
+                AppNavHost(
+                    navController = mainNavController,
+                    initialMatchId = initialMatchId,
+                    currentUserId = userId,
+                    onLogout = {
+
+                        SocketManager.disconnect()
+
+                        userId = null
+
+                        isLoggedIn = false
+                    }
+                )
+            }
+        }
     }
 }
