@@ -6,6 +6,7 @@ import com.example.dating.DatingApplication
 import com.example.dating.core.network.RetrofitClient
 import com.example.dating.data.remote.DeviceApiService
 import com.example.dating.data.remote.RegisterDeviceRequest
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,5 +44,46 @@ object DeviceTokenManager {
                 Log.e("FCM", "REGISTER DEVICE ERROR", e)
             }
         }
+    }
+
+    suspend fun unregisterDevice(
+        context: Context
+    ) {
+
+        FirebaseMessaging.getInstance()
+            .token
+            .addOnSuccessListener { token ->
+
+                CoroutineScope(Dispatchers.IO).launch {
+
+                    try {
+
+                        val deviceApiService =
+                            RetrofitClient.retrofitInstance.create(
+                                DeviceApiService::class.java
+                            )
+
+                        deviceApiService.unregisterDevice(
+                            RegisterDeviceRequest(
+                                deviceToken = token,
+                                deviceType = "android"
+                            )
+                        )
+
+                        Log.d(
+                            "FCM",
+                            "UNREGISTER DEVICE SUCCESS"
+                        )
+
+                    } catch (e: Exception) {
+
+                        Log.e(
+                            "FCM",
+                            "UNREGISTER DEVICE ERROR",
+                            e
+                        )
+                    }
+                }
+            }
     }
 }

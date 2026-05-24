@@ -70,8 +70,12 @@ class ChatViewModel : ViewModel() {
      * - User matches via GET /api/matches
      * - Suggested connections (when endpoint available)
      */
-    private fun loadChatData() {
-        chatUiState = ChatUiState.Loading
+    private fun loadChatData(
+        showLoading: Boolean = true
+    ) {
+        if (showLoading) {
+            chatUiState = ChatUiState.Loading
+        }
 
         viewModelScope.launch {
             try {
@@ -240,6 +244,6 @@ class ChatViewModel : ViewModel() {
      * Refresh conversations from API.
      */
     fun refreshConversations() {
-        loadChatData()
+        loadChatData(showLoading = false)
     }
 }

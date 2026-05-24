@@ -182,12 +182,9 @@ fun AppNavHost(
             }
 
             composable(Screen.Settings.route) {
-                val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
-
                 SettingsScreen(
                     onBackClick = { navController.popBackStack() },
                     onLogoutClick = {
-                        authViewModel.logout()
                         onLogout()
                     }
                 )

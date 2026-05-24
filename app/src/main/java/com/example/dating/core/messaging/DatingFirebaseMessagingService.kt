@@ -10,11 +10,6 @@ class DatingFirebaseMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
 
         Log.d("FCM", "NEW TOKEN: $token")
-
-        DeviceTokenManager.sendTokenToServer(
-            applicationContext,
-            token
-        )
     }
 
     override fun onMessageReceived(message: RemoteMessage) {

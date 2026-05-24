@@ -6,6 +6,7 @@ import retrofit2.http.POST
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 import com.example.dating.ui.chat.ApiResponse
+import retrofit2.http.DELETE
 
 @Serializable
 data class RegisterDeviceRequest(
@@ -21,6 +22,11 @@ interface DeviceApiService {
 
     @POST("api/devices/register")
     suspend fun registerDevice(
+        @Body request: RegisterDeviceRequest
+    ): ApiResponse<Unit>
+
+    @POST("api/devices/unregister")
+    suspend fun unregisterDevice(
         @Body request: RegisterDeviceRequest
     ): ApiResponse<Unit>
 }
