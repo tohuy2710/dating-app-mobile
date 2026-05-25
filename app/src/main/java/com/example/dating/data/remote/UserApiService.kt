@@ -1,5 +1,6 @@
 package com.example.dating.data.remote
 
+import com.example.dating.data.model.Avatar
 import com.example.dating.data.model.CreatePhotoRequest
 import com.example.dating.data.model.Photo
 import com.example.dating.data.model.UpdatePreferencesRequest
@@ -32,4 +33,6 @@ interface UserApiService {
         @Body body: UpdateProfileRequest
     ): ApiResponse<User>
 
+    @GET("api/users/avatar")
+    suspend fun getAvatar(): ApiResponse<Avatar>
 }

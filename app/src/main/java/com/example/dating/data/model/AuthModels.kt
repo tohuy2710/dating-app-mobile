@@ -75,7 +75,11 @@ data class AuthUser(
     val defaultMode: String? = null,
 
     @SerialName("created_at")
-    val createdAt: String
+    val createdAt: String,
+
+    @SerialName("avatar_url")
+    val avatarUrl: String? = null,
+
 )
 
 /**

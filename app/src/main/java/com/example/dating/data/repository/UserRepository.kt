@@ -1,5 +1,6 @@
 package com.example.dating.data.repository
 
+import com.example.dating.data.model.Avatar
 import com.example.dating.data.model.CreatePhotoRequest
 import com.example.dating.data.model.UpdatePreferencesRequest
 import com.example.dating.data.model.UpdateProfileRequest
@@ -41,5 +42,9 @@ class UserRepository(
                 bio = bio
             )
         )
+    }
+
+    suspend fun getAvatar(): Avatar {
+        return userApiService.getAvatar().data
     }
 }

@@ -33,10 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.dating.R
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
 import com.example.dating.ui.theme.DarkBackground
@@ -96,7 +98,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = "Student Connect",
+            text = stringResource(id = R.string.app_name),
             style = MaterialTheme.typography.headlineLarge,
             color = textColor,
             textAlign = TextAlign.Center
@@ -105,7 +107,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Kết nối sinh viên",
+            text = "Chạm để yêu",
             style = MaterialTheme.typography.titleLarge,
             color = secondaryTextColor,
             textAlign = TextAlign.Center

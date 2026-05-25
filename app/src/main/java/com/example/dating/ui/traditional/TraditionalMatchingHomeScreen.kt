@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,16 +32,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dating.R
 import com.example.dating.ui.theme.*
+import coil.compose.AsyncImage
+import com.example.dating.core.auth.TokenManager
+import com.example.dating.ui.profile.ProfileViewModel
 
 @Composable
 fun TraditionalMatchingHomeScreen(
     modifier: Modifier = Modifier,
+    viewModel: ProfileViewModel = viewModel(),
     onMatchNowClick: () -> Unit = {},
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
+    val avatarUrl by viewModel.avatarUrl.collectAsState()
 
     Column(
         modifier = modifier
@@ -51,7 +58,7 @@ fun TraditionalMatchingHomeScreen(
     ) {
         Spacer(modifier = Modifier.height(56.dp))
 
-        AnimatedGradientBorderImage()
+        AnimatedGradientBorderImage(avatarUrl)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -64,7 +71,7 @@ fun TraditionalMatchingHomeScreen(
 }
 
 @Composable
-private fun AnimatedGradientBorderImage() {
+private fun AnimatedGradientBorderImage(avatarUrl: String?) {
     val infinite = rememberInfiniteTransition(label = "border")
 
     val progress by infinite.animateFloat(
@@ -112,9 +119,9 @@ private fun AnimatedGradientBorderImage() {
                 .padding(stroke)
                 .clip(RoundedCornerShape(radius))
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.thl),
-                contentDescription = null,
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = "User Avatar",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .matchParentSize()

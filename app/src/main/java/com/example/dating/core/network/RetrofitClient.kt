@@ -39,6 +39,8 @@ object RetrofitClient {
     // For physical device: http://your-machine-ip:3000
     private const val BASE_URL = "http://192.168.1.19:5000/"
 
+//    private const val BASE_URL = "http://10.0.2.2:5000/"
+
     private val json = Json {
         ignoreUnknownKeys = true
     }

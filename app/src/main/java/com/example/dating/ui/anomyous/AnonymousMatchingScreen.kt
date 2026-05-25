@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +28,6 @@ import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,10 +47,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dating.R
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
 import com.example.dating.ui.theme.DarkBackground
@@ -439,12 +443,13 @@ private fun AnimatedAnonymousCard() {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-
-                    Icon(
-                        imageVector = Icons.Default.VisibilityOff,
+                    Image(
+                        painter = painterResource(id = R.drawable.anonymous_avatar),
                         contentDescription = null,
-                        tint = White,
-                        modifier = Modifier.size(58.dp)
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(CircleShape)
                     )
                 }
 
@@ -470,17 +475,40 @@ private fun AnonymousFeatureRow() {
     ) {
 
         FeatureItem(
-            icon = Icons.Default.Security,
+            iconContent = {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = BrandPink,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
             title = "Riêng tư"
         )
 
         FeatureItem(
-            icon = Icons.Default.Psychology,
+            iconContent = {
+                Icon(
+                    imageVector = Icons.Default.Psychology,
+                    contentDescription = null,
+                    tint = BrandPink,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
             title = "Cùng sở thích"
         )
 
         FeatureItem(
-            icon = Icons.Default.VisibilityOff,
+            iconContent = {
+                Image(
+                    painter = painterResource(id = R.drawable.anonymous_avatar),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                )
+            },
             title = "Ẩn danh"
         )
     }
@@ -488,7 +516,7 @@ private fun AnonymousFeatureRow() {
 
 @Composable
 private fun FeatureItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconContent: @Composable () -> Unit,
     title: String
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -506,13 +534,7 @@ private fun FeatureItem(
                 .background(surfaceColor),
             contentAlignment = Alignment.Center
         ) {
-
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = BrandPink,
-                modifier = Modifier.size(28.dp)
-            )
+            iconContent()
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -557,12 +579,14 @@ private fun RotatingAnonymousIcon() {
             Box(
                 contentAlignment = Alignment.Center
             ) {
-
-                Icon(
-                    imageVector = Icons.Default.VisibilityOff,
+                Image(
+                    painter = painterResource(id = R.drawable.anonymous_avatar),
                     contentDescription = null,
-                    tint = BrandPink,
-                    modifier = Modifier.size(42.dp)
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .graphicsLayer { rotationZ = rotation } // Áp dụng hiệu ứng xoay tròn
                 )
             }
         }

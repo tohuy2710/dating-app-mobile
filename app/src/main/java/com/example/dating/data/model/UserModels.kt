@@ -138,3 +138,24 @@ data class UpdateProfileRequest(
 
     val bio: String? = null
 )
+
+@Serializable
+data class Avatar(
+    @SerialName("photo_id")
+    val photoId: Int,
+
+    @SerialName("user_id")
+    val userId: Int,
+
+    @SerialName("image_url")
+    val imageUrl: String,
+
+    @SerialName("is_primary")
+    val isPrimary: Boolean,
+
+    @SerialName("display_order")
+    val displayOrder: Int,
+
+    @SerialName("created_at")
+    val createdAt: String
+)

@@ -48,8 +48,12 @@ class ProfileViewModel : ViewModel() {
     val uiState: StateFlow<ProfileUiState> =
         _uiState.asStateFlow()
 
+    private val _avatarUrl = MutableStateFlow<String?>(null)
+    val avatarUrl: StateFlow<String?> = _avatarUrl.asStateFlow()
+
     init {
         getCurrentUser()
+        getAvatar()
     }
 
     fun getCurrentUser() {
@@ -155,6 +159,17 @@ class ProfileViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 android.util.Log.e("PROFILE", "Update profile failed", e)
+            }
+        }
+    }
+
+    fun getAvatar() {
+        viewModelScope.launch {
+            try {
+                val avatar = repository.getAvatar() // Lấy kết quả từ repo
+                _avatarUrl.value = avatar.imageUrl // Gán vào State (Nhớ đổi thành imageUrl nếu bạn đã dùng @SerialName)
+            } catch (e: Exception) {
+                android.util.Log.e("PROFILE", "Get avatar failed", e)
             }
         }
     }
