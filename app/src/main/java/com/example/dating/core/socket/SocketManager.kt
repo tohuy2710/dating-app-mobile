@@ -16,6 +16,9 @@ object SocketManager {
     private val _anonymousMatchEvent = MutableSharedFlow<JSONObject>(extraBufferCapacity = 1)
     val anonymousMatchEvent = _anonymousMatchEvent.asSharedFlow()
 
+    private val _newMessageEvent = MutableSharedFlow<JSONObject>(extraBufferCapacity = 1)
+    val newMessageEvent = _newMessageEvent.asSharedFlow()
+
     fun connect(
         userId: Int
     ) {
@@ -41,12 +44,11 @@ object SocketManager {
             }
 
             socket?.on("new_message") { args ->
-
                 if (args.isNotEmpty()) {
-
                     val data = args[0] as JSONObject
-
-                    Log.d("SOCKET", data.toString())
+                    Log.d("SOCKET", "New message received: $data")
+                    // Bắn dữ liệu vào Flow
+                    _newMessageEvent.tryEmit(data)
                 }
             }
 

@@ -26,6 +26,10 @@ import com.example.dating.core.network.RetrofitClient
 import com.example.dating.data.remote.MatchesApiService
 import com.example.dating.data.repository.ChatRepository
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+import org.json.JSONObject
+import com.example.dating.core.socket.SocketManager
 
 class ConversationViewModel(
     savedStateHandle: SavedStateHandle
@@ -61,11 +65,49 @@ class ConversationViewModel(
     init {
         if (matchId != null) {
             loadConversationDetail()
+            observeIncomingMessages()
         } else {
             conversationUiState =
                 ConversationUiState.Error(
                     "Invalid match id"
                 )
+        }
+    }
+
+    private fun observeIncomingMessages() {
+        viewModelScope.launch {
+            SocketManager.newMessageEvent.collect { data ->
+                handleIncomingMessage(data)
+            }
+        }
+    }
+
+    private fun handleIncomingMessage(data: JSONObject) {
+        try {
+            val incomingMatchId = data.optInt("matchId", -1)
+            val currentMatchId = matchId ?: return
+
+            if (incomingMatchId == currentMatchId) {
+                val messageObj = data.getJSONObject("message")
+                val json = Json { ignoreUnknownKeys = true }
+                val incomingMessage = json.decodeFromString<Message>(messageObj.toString())
+                val currentState = conversationUiState
+                if (currentState is ConversationUiState.Success) {
+                    val isDuplicate = currentState.conversation.messages.any {
+                        it.messageId == incomingMessage.messageId
+                    }
+                    if (!isDuplicate) {
+                        val updatedConversation = currentState.conversation.copy(
+                            messages = currentState.conversation.messages + incomingMessage,
+                            lastMessage = incomingMessage.content,
+                            lastMessageTime = incomingMessage.sentAt
+                        )
+                        conversationUiState = ConversationUiState.Success(updatedConversation)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
