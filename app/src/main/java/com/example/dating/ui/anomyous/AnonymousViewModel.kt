@@ -1,17 +1,23 @@
 package com.example.dating.ui.anonymous
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf // Import thêm cái này
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dating.core.network.RetrofitClient
+import com.example.dating.core.socket.SocketManager
 import com.example.dating.data.remote.MatchesApiService
 import com.example.dating.data.repository.AnonymousRepository
 import com.example.dating.ui.chat.MatchDetailResponseData
+import com.google.gson.Gson // Import Gson để parse JSON
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import org.json.JSONObject
 
 class AnonymousViewModel : ViewModel() {
 
@@ -32,125 +38,105 @@ class AnonymousViewModel : ViewModel() {
 
     private var countdownJob: Job? = null
 
-    var remainingSeconds by mutableStateOf(30)
+    var remainingSeconds by mutableIntStateOf(30)
         private set
 
-    /**
-     * Start anonymous matching
-     *
-     * API:
-     * POST /api/matches/anonymous
-     */
-    fun startAnonymousMatching() {
+    init {
+        observeSocketEvents()
+    }
 
-        anonymousUiState = AnonymousUiState.Searching
-
-        remainingSeconds = 30
-
-        startCountdown()
-
+    private fun observeSocketEvents() {
         viewModelScope.launch {
-
-            try {
-
-                val response =
-                    anonymousRepository.anonymousMatch()
-
-                when (response.status) {
-
-                    "matched" -> {
-
-                        countdownJob?.cancel()
-
-                        anonymousUiState =
-                            AnonymousUiState.Matched(
-                                match = response.match,
-                                matchScore = response.matchScore
-                            )
-                    }
-
-                    "queued" -> {
-
-                        anonymousUiState =
-                            AnonymousUiState.Queued(
-                                queueId = response.queueId ?: -1,
-                                message = response.message
-                            )
-                    }
-
-                    else -> {
-
-                        anonymousUiState =
-                            AnonymousUiState.Error(
-                                "Unknown response state"
-                            )
-                    }
-                }
-
-            } catch (e: Exception) {
-
-                countdownJob?.cancel()
-
-                anonymousUiState =
-                    AnonymousUiState.Error(
-                        e.message ?: "Anonymous matching failed"
-                    )
+            SocketManager.anonymousMatchEvent.collect { data ->
+                handleSocketMatch(data)
             }
         }
     }
 
-    /**
-     * Cancel matching
-     */
-    fun cancelMatching() {
+    private fun handleSocketMatch(data: JSONObject) {
+        try {
+            val matchScore = data.getInt("matchScore")
+            val matchObj = data.getJSONObject("match")
+            Log.d("SOCKET", "Match Score: $matchScore")
+            Log.d("SOCKET", "Match Object: $matchObj")
 
-        countdownJob?.cancel()
+            val json = Json { ignoreUnknownKeys = true }
+            val matchData = json.decodeFromString<MatchDetailResponseData>(matchObj.toString())
+            Log.d("SOCKET", "Match Data: $matchData")
 
-        anonymousUiState = AnonymousUiState.Idle
+
+            countdownJob?.cancel()
+
+            anonymousUiState = AnonymousUiState.Matched(
+                match = matchData,
+                matchScore = matchScore
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    /**
-     * Reset state
-     */
-    fun resetState() {
-
-        countdownJob?.cancel()
-
+    fun startAnonymousMatching() {
+        anonymousUiState = AnonymousUiState.Searching
         remainingSeconds = 30
+        startCountdown()
 
+        viewModelScope.launch {
+            try {
+                val response = anonymousRepository.anonymousMatch()
+
+                when (response.status) {
+                    "matched" -> {
+                        countdownJob?.cancel()
+                        anonymousUiState = AnonymousUiState.Matched(
+                            match = response.match,
+                            matchScore = response.matchScore
+                        )
+                    }
+                    "queued" -> {
+                        anonymousUiState = AnonymousUiState.Queued(
+                            queueId = response.queueId ?: -1,
+                            message = response.message
+                        )
+                    }
+                    else -> {
+                        anonymousUiState = AnonymousUiState.Error("Unknown response state")
+                    }
+                }
+            } catch (e: Exception) {
+                countdownJob?.cancel()
+                anonymousUiState = AnonymousUiState.Error(e.message ?: "Anonymous matching failed")
+            }
+        }
+    }
+
+    fun cancelMatching() {
+        countdownJob?.cancel()
         anonymousUiState = AnonymousUiState.Idle
     }
 
-    /**
-     * Countdown 30 seconds
-     */
-    private fun startCountdown() {
-
+    fun resetState() {
         countdownJob?.cancel()
+        remainingSeconds = 30
+        anonymousUiState = AnonymousUiState.Idle
+    }
 
+    private fun startCountdown() {
+        countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
-
             while (remainingSeconds > 0) {
-
                 delay(1000)
-
                 remainingSeconds--
             }
 
-            if (remainingSeconds == 0 &&
-                anonymousUiState !is AnonymousUiState.Matched
-            ) {
-
-                anonymousUiState =
-                    AnonymousUiState.Timeout
+            // Tránh đè state nếu socket/API vừa trả về đúng lúc giây thứ 0
+            if (remainingSeconds == 0 && anonymousUiState !is AnonymousUiState.Matched) {
+                anonymousUiState = AnonymousUiState.Timeout
             }
         }
     }
 }
 
-/**
- * UI State for Anonymous Matching
- */
 sealed class AnonymousUiState {
 
     data object Idle : AnonymousUiState()

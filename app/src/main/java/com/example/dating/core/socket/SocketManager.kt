@@ -5,12 +5,16 @@ import io.socket.client.IO
 import io.socket.client.Socket
 import org.json.JSONObject
 import com.example.dating.core.config.AppConfig
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 object SocketManager {
 
     private var socket: Socket? = null
     private var isConnected = false
 
+    private val _anonymousMatchEvent = MutableSharedFlow<JSONObject>(extraBufferCapacity = 1)
+    val anonymousMatchEvent = _anonymousMatchEvent.asSharedFlow()
 
     fun connect(
         userId: Int
@@ -43,6 +47,15 @@ object SocketManager {
                     val data = args[0] as JSONObject
 
                     Log.d("SOCKET", data.toString())
+                }
+            }
+
+            socket?.on("anonymous_match") { args ->
+                if (args.isNotEmpty()) {
+                    val data = args[0] as JSONObject
+                    Log.d("SOCKET", "Match Event Received: $data")
+                    // Đẩy dữ liệu vào Flow để ViewModel nhận
+                    _anonymousMatchEvent.tryEmit(data)
                 }
             }
 
