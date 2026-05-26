@@ -1,11 +1,16 @@
 package com.example.dating.ui.profile
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -16,11 +21,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSurface
 import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSurface
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.White
 
@@ -32,6 +43,7 @@ fun LikesReceivedScreen(
 ) {
     val users by viewModel.users.collectAsState()
     val index by viewModel.index.collectAsState()
+    val showTutorial by viewModel.showTutorial.collectAsState()
 
     val currentUser = users.getOrNull(index)
 
@@ -49,64 +61,86 @@ fun LikesReceivedScreen(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .verticalScroll(scrollState)
-    ) {
-        // HERO (ONLY SWIPE HERE)
-        Box(
+    // BỌC TOÀN BỘ TRONG BOX
+    Box(modifier = modifier.fillMaxSize()) {
+
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .pointerInput(currentUser.userId) {
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { _, dragAmount ->
-                            offsetX += dragAmount
-                        },
-                        onDragEnd = {
-                            when {
-                                offsetX > 250 -> viewModel.likeUser(currentUser)
-                                offsetX < -250 -> viewModel.passUser(currentUser)
+                .fillMaxSize()
+                .background(backgroundColor)
+                .verticalScroll(scrollState)
+        ) {
+            // HERO (ONLY SWIPE HERE)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(currentUser.userId) {
+                        detectHorizontalDragGestures(
+                            onHorizontalDrag = { _, dragAmount ->
+                                offsetX += dragAmount
+                            },
+                            onDragEnd = {
+                                when {
+                                    offsetX > 250 -> viewModel.likeUser(currentUser)
+                                    offsetX < -250 -> viewModel.passUser(currentUser)
+                                }
+                                offsetX = 0f
                             }
-                            offsetX = 0f
-                        }
+                        )
+                    }
+                    .graphicsLayer {
+                        translationX = offsetX
+                        rotationZ = offsetX / 60
+                    }
+            ) {
+                HeroImage(currentUser.avatarUrl)
+
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .statusBarsPadding() // FIX LỖI KÉO DÃN BUTTON BACK
+                        .padding(16.dp)
+                        .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = White
                     )
                 }
-                .graphicsLayer {
-                    translationX = offsetX
-                    rotationZ = offsetX / 60
-                }
-        ) {
-            HeroImage(currentUser.avatarUrl)
-
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
-                    tint = White
-                )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            ProfileCard(currentUser)
+            Spacer(modifier = Modifier.height(16.dp))
+            InterestChips(
+                currentUser.preferences
+                    ?.anonymousInterests
+                    ?.split(",")
+                    ?.filter { it.isNotBlank() }
+                    ?: emptyList()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            GalleryGrid(currentUser.photos)
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        ProfileCard(currentUser)
-        Spacer(modifier = Modifier.height(16.dp))
-        InterestChips(
-            currentUser.preferences
-                ?.anonymousInterests
-                ?.split(",")
-                ?.filter { it.isNotBlank() }
-                ?: emptyList()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        GalleryGrid(currentUser.photos)
-        Spacer(modifier = Modifier.height(24.dp))
+        // POPUP HƯỚNG DẪN
+        AnimatedVisibility(
+            visible = showTutorial,
+            enter = slideInVertically(initialOffsetY = { -it }),
+            exit = slideOutVertically(targetOffsetY = { -it }),
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) {
+            LaunchedEffect(Unit) {
+                delay(3000L) // Ẩn sau 3 giây
+                viewModel.hideTutorialLocally()
+            }
+
+            TutorialPopup(
+                onUnderstandClick = { viewModel.completeTutorial() }
+            )
+        }
     }
 }
 
@@ -114,7 +148,7 @@ fun LikesReceivedScreen(
 @Composable
 fun LikesReceivedEmptyState(
     onRetry: () -> Unit,
-    onBackClick: () -> Unit // Thêm tham số callback này
+    onBackClick: () -> Unit
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val textColor = if (isDarkTheme) DarkText else LightText
@@ -125,16 +159,18 @@ fun LikesReceivedEmptyState(
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        // NÚT BACK: Nằm ở góc trên cùng bên trái
+        // NÚT BACK: Đã sửa lỗi căn lề và padding
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
-                .padding(top = 40.dp, start = 16.dp) // padding top để tránh đè status bar nếu cần
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(16.dp)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Quay lại",
-                tint = textColor // Tự động đổi màu trắng/đen theo theme
+                tint = textColor
             )
         }
 
@@ -152,6 +188,51 @@ fun LikesReceivedEmptyState(
 
             Button(onClick = onRetry) {
                 Text("Tải lại")
+            }
+        }
+    }
+}
+
+// Bê nguyên TutorialPopup từ ProfileScreen sang đây
+@Composable
+private fun TutorialPopup(onUnderstandClick: () -> Unit) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .systemBarsPadding(),
+        shape = RoundedCornerShape(16.dp),
+        color = surfaceColor.copy(alpha = 0.85f),
+        border = BorderStroke(1.dp, textColor.copy(alpha = 0.08f)),
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Vuốt sang trái nếu muốn bỏ qua và vuốt sang phải nếu muốn kết nối.",
+                color = textColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onUnderstandClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandPink,
+                    contentColor = White
+                ),
+                shape = RoundedCornerShape(999.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Đã rõ, không nhắc lại", fontWeight = FontWeight.Bold)
             }
         }
     }

@@ -28,12 +28,16 @@ class LikesReceivedViewModel : ViewModel() {
     private val _index = MutableStateFlow(0)
     val index: StateFlow<Int> = _index.asStateFlow()
 
+    private val _showTutorial = MutableStateFlow(false)
+    val showTutorial: StateFlow<Boolean> = _showTutorial.asStateFlow()
+
     private var currentPage = 1
     private var isLoading = false
     private var hasMore = true
 
     init {
         loadNextPage()
+        checkOnboardingStatus()
     }
 
     fun nextUser() {
@@ -92,5 +96,31 @@ class LikesReceivedViewModel : ViewModel() {
                 Log.e("LikesReceivedVM", "interaction error", e)
             }
         }
+    }
+
+    private fun checkOnboardingStatus() {
+        viewModelScope.launch {
+            try {
+                val isBeginner = repository.getOnboardingStatus()
+                _showTutorial.value = isBeginner
+            } catch (e: Exception) {
+                Log.e("LikesReceivedVM", "Lỗi lấy trạng thái onboarding", e)
+            }
+        }
+    }
+
+    fun completeTutorial() {
+        _showTutorial.value = false
+        viewModelScope.launch {
+            try {
+                repository.completeOnboarding()
+            } catch (e: Exception) {
+                Log.e("LikesReceivedVM", "Lỗi hoàn thành onboarding", e)
+            }
+        }
+    }
+
+    fun hideTutorialLocally() {
+        _showTutorial.value = false
     }
 }

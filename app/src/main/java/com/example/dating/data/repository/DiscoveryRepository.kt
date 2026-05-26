@@ -40,4 +40,12 @@ class DiscoveryRepository(
     suspend fun getSentRequests(page: Int, limit: Int): DiscoverResponse {
         return api.getSentRequests(page = page, limit = limit).data
     }
+
+    suspend fun getOnboardingStatus(): Boolean {
+        return api.getOnboardingStatus().data.isBeginner
+    }
+
+    suspend fun completeOnboarding() {
+        api.completeOnboarding()
+    }
 }

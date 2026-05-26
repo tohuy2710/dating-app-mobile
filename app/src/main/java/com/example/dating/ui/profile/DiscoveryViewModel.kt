@@ -28,12 +28,16 @@ class DiscoveryViewModel : ViewModel() {
     private val _index = MutableStateFlow(0)
     val index: StateFlow<Int> = _index.asStateFlow()
 
+    private val _showTutorial = MutableStateFlow(false)
+    val showTutorial: StateFlow<Boolean> = _showTutorial.asStateFlow()
+
     private var currentPage = 1
     private var isLoading = false
     private var hasMore = true
 
     init {
         loadNextPage()
+        checkOnboardingStatus()
     }
 
     fun currentUser(): User? {
@@ -100,5 +104,31 @@ class DiscoveryViewModel : ViewModel() {
                 Log.e("DiscoveryVM", "interaction error", e)
             }
         }
+    }
+
+    private fun checkOnboardingStatus() {
+        viewModelScope.launch {
+            try {
+                val isBeginner = repository.getOnboardingStatus()
+                _showTutorial.value = isBeginner
+            } catch (e: Exception) {
+                Log.e("DiscoveryVM", "Lỗi lấy trạng thái onboarding", e)
+            }
+        }
+    }
+
+    fun completeTutorial() {
+        _showTutorial.value = false
+        viewModelScope.launch {
+            try {
+                repository.completeOnboarding()
+            } catch (e: Exception) {
+                Log.e("DiscoveryVM", "Lỗi hoàn thành onboarding", e)
+            }
+        }
+    }
+
+    fun hideTutorialLocally() {
+        _showTutorial.value = false
     }
 }

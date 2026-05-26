@@ -159,3 +159,9 @@ data class Avatar(
     @SerialName("created_at")
     val createdAt: String
 )
+
+@Serializable
+data class OnboardingStatus(
+    @SerialName("is_beginer")
+    val isBeginner: Boolean
+)

@@ -1,6 +1,10 @@
 package com.example.dating.ui.profile
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -19,6 +23,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,11 +35,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,6 +79,7 @@ import com.example.dating.ui.theme.LightSurface
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.SecondaryPurple
 import com.example.dating.ui.theme.White
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -82,6 +91,7 @@ fun ProfileScreen(
 ) {
     val users by viewModel.users.collectAsState()
     val index by viewModel.index.collectAsState()
+    val showTutorial by viewModel.showTutorial.collectAsState()
 
     val currentUser = users.getOrNull(index)
 
@@ -99,72 +109,85 @@ fun ProfileScreen(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .verticalScroll(scrollState)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
 
-        // HERO (ONLY SWIPE HERE)
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .pointerInput(currentUser.userId) {
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { _, dragAmount ->
-                            offsetX += dragAmount
-                        },
-                        onDragEnd = {
-                            when {
-                                offsetX > 250 -> viewModel.likeUser(currentUser)
-                                offsetX < -250 -> viewModel.passUser(currentUser)
+                .fillMaxSize()
+                .background(backgroundColor)
+                .verticalScroll(scrollState)
+        ) {
+            // HERO (ONLY SWIPE HERE)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(currentUser.userId) {
+                        detectHorizontalDragGestures(
+                            onHorizontalDrag = { _, dragAmount ->
+                                offsetX += dragAmount
+                            },
+                            onDragEnd = {
+                                when {
+                                    offsetX > 250 -> viewModel.likeUser(currentUser)
+                                    offsetX < -250 -> viewModel.passUser(currentUser)
+                                }
+                                offsetX = 0f
                             }
-                            offsetX = 0f
-                        }
+                        )
+                    }
+                    .graphicsLayer {
+                        translationX = offsetX
+                        rotationZ = offsetX / 60
+                    }
+            ) {
+                HeroImage(currentUser.avatarUrl)
+
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(16.dp)
+                        .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = White
                     )
                 }
-                .graphicsLayer {
-                    translationX = offsetX
-                    rotationZ = offsetX / 60
-                }
-        ) {
-
-            HeroImage(currentUser.avatarUrl)
-
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
-                    tint = White
-                )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            ProfileCard(currentUser)
+            Spacer(modifier = Modifier.height(16.dp))
+            InterestChips(
+                currentUser.preferences
+                    ?.anonymousInterests
+                    ?.split(",")
+                    ?.filter { it.isNotBlank() }
+                    ?: emptyList()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            GalleryGrid(currentUser.photos)
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // POPUP HƯỚNG DẪN
+        AnimatedVisibility(
+            visible = showTutorial,
+            enter = slideInVertically(initialOffsetY = { -it }),
+            exit = slideOutVertically(targetOffsetY = { -it }),
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) {
+            LaunchedEffect(Unit) {
+                delay(3000L)
+                viewModel.hideTutorialLocally()
+            }
 
-        ProfileCard(currentUser)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        InterestChips(
-            currentUser.preferences
-                ?.anonymousInterests
-                ?.split(",")
-                ?.filter { it.isNotBlank() }
-                ?: emptyList()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        GalleryGrid(currentUser.photos)
-
-        Spacer(modifier = Modifier.height(24.dp))
+            TutorialPopup(
+                onUnderstandClick = { viewModel.completeTutorial() }
+            )
+        }
     }
 }
 
@@ -334,7 +357,9 @@ fun EmptyState(
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
-                .padding(top = 40.dp, start = 16.dp) // padding top để tránh đè status bar nếu cần
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(16.dp)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -369,6 +394,50 @@ fun formatBirthDate(dateString: String?): String {
     } catch (e: Exception) {
         // Nếu parse lỗi, trả về nguyên gốc hoặc giá trị mặc định
         dateString
+    }
+}
+
+@Composable
+private fun TutorialPopup(onUnderstandClick: () -> Unit) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .systemBarsPadding(),
+        shape = RoundedCornerShape(16.dp),
+        color = surfaceColor.copy(alpha = 0.85f),
+        border = BorderStroke(1.dp, textColor.copy(alpha = 0.08f)),
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Vuốt sang trái nếu muốn bỏ qua và vuốt sang phải nếu muốn kết nối.",
+                color = textColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onUnderstandClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandPink,
+                    contentColor = White
+                ),
+                shape = RoundedCornerShape(999.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Đã rõ, không nhắc lại", fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 
