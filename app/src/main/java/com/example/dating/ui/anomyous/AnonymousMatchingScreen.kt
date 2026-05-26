@@ -300,14 +300,6 @@ fun AnonymousMatchingScreen(
                         text = "Hai bạn có nhiều sở thích tương đồng.",
                         color = secondaryTextColor
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "Điểm tương thích: ${uiState.matchScore ?: 0}",
-                        fontWeight = FontWeight.Bold,
-                        color = BrandPink
-                    )
                 }
             },
 

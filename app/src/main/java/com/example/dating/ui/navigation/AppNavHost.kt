@@ -39,6 +39,7 @@ fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     initialMatchId: Int? = null,
+    onMatchIdHandled: () -> Unit = {},
     onLogout: () -> Unit,
     currentUserId: Int?
 ) {
@@ -61,9 +62,10 @@ fun AppNavHost(
 
     LaunchedEffect(initialMatchId) {
         if (initialMatchId != null) {
-            navController.navigate(
-                Screen.Conversation.createRoute(initialMatchId)
-            )
+            navController.navigate("conversation/$initialMatchId") {
+                launchSingleTop = true
+            }
+            onMatchIdHandled()
         }
     }
 

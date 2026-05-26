@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppRoot(
     authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory),
-    initialMatchId: Int? = null
+    initialMatchId: Int? = null,
+    onMatchIdHandled: () -> Unit = {}
 ) {
 
     val context = LocalContext.current
@@ -93,6 +94,7 @@ fun AppRoot(
                 AppNavHost(
                     navController = mainNavController,
                     initialMatchId = initialMatchId,
+                    onMatchIdHandled = onMatchIdHandled,
                     currentUserId = userId,
                     onLogout = {
                         scope.launch {
