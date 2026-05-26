@@ -5,8 +5,8 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -28,22 +28,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dating.R
-import com.example.dating.ui.theme.*
 import coil.compose.AsyncImage
-import com.example.dating.core.auth.TokenManager
 import com.example.dating.ui.profile.ProfileViewModel
+import com.example.dating.ui.theme.*
 
 @Composable
 fun TraditionalMatchingHomeScreen(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = viewModel(),
     onMatchNowClick: () -> Unit = {},
+    onLikesReceivedClick: () -> Unit = {},
+    onLikesSentClick: () -> Unit = {}
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
@@ -66,7 +66,10 @@ fun TraditionalMatchingHomeScreen(
 
         Spacer(modifier = Modifier.height(34.dp))
 
-        ActionRow()
+        ActionRow(
+            onLikesReceivedClick = onLikesReceivedClick,
+            onLikesSentClick = onLikesSentClick
+        )
     }
 }
 
@@ -94,7 +97,6 @@ private fun AnimatedGradientBorderImage(avatarUrl: String?) {
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
 
-        // Tâm gradient chạy vòng tròn quanh viền (KHÔNG rotate canvas)
         val cx = w / 2 + (w / 2) * kotlin.math.cos(2 * Math.PI * progress).toFloat()
         val cy = h / 2 + (h / 2) * kotlin.math.sin(2 * Math.PI * progress).toFloat()
 
@@ -104,12 +106,7 @@ private fun AnimatedGradientBorderImage(avatarUrl: String?) {
                 .drawBehind {
                     drawRoundRect(
                         brush = Brush.sweepGradient(
-                            colors = listOf(
-                                BrandPink,
-                                BrandPinkDark,
-                                Color(0xFFFF8AD8),
-                                BrandPink
-                            ),
+                            colors = listOf(BrandPink, BrandPinkDark, Color(0xFFFF8AD8), BrandPink),
                             center = Offset(cx, cy)
                         ),
                         cornerRadius = CornerRadius(radius.toPx(), radius.toPx()),
@@ -142,9 +139,7 @@ private fun MatchNowButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                brush = Brush.linearGradient(
-                    listOf(BrandPinkDark, BrandPink)
-                ),
+                brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
                 shape = RoundedCornerShape(999.dp)
             )
     ) {
@@ -164,57 +159,78 @@ private fun MatchNowButton(onClick: () -> Unit) {
     }
 }
 
+// CẬP NHẬT ACTION ROW ĐỂ BIẾN CÁC PHẦN TỬ THÀNH BUTTON CLICKABLE
 @Composable
-private fun ActionRow() {
+private fun ActionRow(
+    onLikesReceivedClick: () -> Unit,
+    onLikesSentClick: () -> Unit
+) {
     val isDarkTheme = isSystemInDarkTheme()
     val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
 
-    val actionItems = listOf(
-        Icons.Default.Favorite to "Đã thích bạn",
-        Icons.Default.Star to "Bạn đã thích",
-    )
-
     Row(
-        horizontalArrangement = Arrangement.spacedBy(
-            24.dp,
-            Alignment.CenterHorizontally
-        ),
+        horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        actionItems.forEach { (icon, label) ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(SecondaryPurple),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = secondaryTextColor
+        // BUTTON 1: Đã thích bạn
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onLikesReceivedClick() }
+                .padding(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(SecondaryPurple),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Likes Received",
+                    tint = White,
+                    modifier = Modifier.size(28.dp)
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Đã thích bạn",
+                style = MaterialTheme.typography.bodySmall,
+                color = secondaryTextColor
+            )
         }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-private fun PreviewScreen() {
-    Surface {
-        TraditionalMatchingHomeScreen()
+        // BUTTON 2: Bạn đã thích
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onLikesSentClick() }
+                .padding(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(SecondaryPurple),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Likes Sent",
+                    tint = White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Bạn đã thích",
+                style = MaterialTheme.typography.bodySmall,
+                color = secondaryTextColor
+            )
+        }
     }
 }

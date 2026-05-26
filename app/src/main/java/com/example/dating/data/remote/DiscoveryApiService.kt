@@ -21,4 +21,16 @@ interface DiscoveryApiService {
     suspend fun createInteraction(
         @Body body: InteractionRequest
     ): ApiResponse<InteractionResultData>
+
+    @GET("api/interactions/requests/received")
+    suspend fun getReceivedRequests(
+        @Query("page") page: Int,
+        @Query("limit") limit: Int
+    ): ApiResponse<DiscoverResponse>
+
+    @GET("api/interactions/requests/sent")
+    suspend fun getSentRequests(
+        @Query("page") page: Int,
+        @Query("limit") limit: Int
+    ): ApiResponse<DiscoverResponse>
 }

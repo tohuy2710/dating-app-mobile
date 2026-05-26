@@ -71,6 +71,8 @@ import com.example.dating.ui.theme.LightSurface
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.SecondaryPurple
 import com.example.dating.ui.theme.White
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -90,7 +92,10 @@ fun ProfileScreen(
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
 
     if (currentUser == null) {
-        EmptyState(onRetry = { viewModel.loadNextPage() })
+        EmptyState(
+            onRetry = { viewModel.loadNextPage() },
+            onBackClick = onBackClick
+        )
         return
     }
 
@@ -164,7 +169,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun HeroImage(imageUrl: String?) {
+fun HeroImage(imageUrl: String?) {
 
     AsyncImage(
         model = imageUrl.takeIf { !it.isNullOrBlank() } ?: R.drawable.default_avatar,
@@ -178,101 +183,7 @@ private fun HeroImage(imageUrl: String?) {
 }
 
 @Composable
-private fun ActionButtonsRow(
-    modifier: Modifier = Modifier,
-    onPass: () -> Unit,
-    onLike: () -> Unit
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        FloatingActionButton(
-            size = 56.dp,
-            solidColor = SecondaryPurple,
-            icon = Icons.Default.Close,
-            iconTint = White,
-            onClick = onPass
-        )
-
-        FloatingActionButton(
-            size = 56.dp,
-            solidColor = SecondaryPurple,
-            icon = Icons.Default.Favorite,
-            iconTint = White,
-            onClick = onLike
-        )
-    }
-}
-
-@Composable
-private fun FloatingActionButton(
-    size: Dp,
-    background: Brush? = null,
-    solidColor: Color? = null,
-    icon: ImageVector,
-    iconTint: Color,
-    iconModifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val haptic = LocalHapticFeedback.current
-    var pressed by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 1.08f else 1f,
-        label = ""
-    )
-
-    Box(
-        modifier = Modifier
-            .size(size)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(CircleShape)
-            .background(solidColor ?: Color.Transparent)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        pressed = true
-                        haptic.performHapticFeedback(
-                            androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress
-                        )
-
-                        val released = tryAwaitRelease()
-
-                        pressed = false
-
-                        if (released) onClick()
-                    }
-                )
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        if (background != null) {
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .background(background)
-            )
-        }
-
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = iconTint,
-            modifier = Modifier
-                .size(size * 0.8f)
-                .then(iconModifier)
-        )
-    }
-}
-
-@Composable
-private fun ProfileCard(user: User) {
+fun ProfileCard(user: User) {
     val isDarkTheme = isSystemInDarkTheme()
     val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
     val textColor = if (isDarkTheme) DarkText else LightText
@@ -301,7 +212,7 @@ private fun ProfileCard(user: User) {
                 )
 
                 Text(
-                    text = user.birthDate ?: "Không rõ ngày sinh",
+                    text = formatBirthDate(user.birthDate),
                     color = secondaryTextColor,
                     fontSize = 13.sp
                 )
@@ -321,13 +232,13 @@ private fun ProfileCard(user: User) {
 }
 
 @Composable
-private fun InterestChips(interests: List<String>) {
+fun InterestChips(interests: List<String>) {
     ChipRow(labels = interests)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ChipRow(labels: List<String>) {
+fun ChipRow(labels: List<String>) {
     val isDarkTheme = isSystemInDarkTheme()
     val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
 
@@ -372,7 +283,7 @@ private fun ChipRow(labels: List<String>) {
 }
 
 @Composable
-private fun GalleryGrid(photos: List<UserPhoto>) {
+fun GalleryGrid(photos: List<UserPhoto>) {
 
     Column(
         modifier = Modifier
@@ -406,7 +317,10 @@ private fun GalleryGrid(photos: List<UserPhoto>) {
 }
 
 @Composable
-fun EmptyState(onRetry: () -> Unit) {
+fun EmptyState(
+    onRetry: () -> Unit,
+    onBackClick: () -> Unit
+) {
     val isDarkTheme = isSystemInDarkTheme()
     val textColor = if (isDarkTheme) DarkText else LightText
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
@@ -417,6 +331,17 @@ fun EmptyState(onRetry: () -> Unit) {
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .padding(top = 40.dp, start = 16.dp) // padding top để tránh đè status bar nếu cần
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Quay lại",
+                tint = textColor // Tự động đổi màu trắng/đen theo theme
+            )
+        }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "Không có người dùng nào phù hợp",
@@ -429,6 +354,21 @@ fun EmptyState(onRetry: () -> Unit) {
                 Text("Tải lại")
             }
         }
+    }
+}
+
+fun formatBirthDate(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "Không rõ ngày sinh"
+
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+
+        date?.let { outputFormat.format(it) } ?: dateString
+    } catch (e: Exception) {
+        // Nếu parse lỗi, trả về nguyên gốc hoặc giá trị mặc định
+        dateString
     }
 }
 

@@ -10,6 +10,10 @@ sealed class Screen(val route: String) {
 
     object Traditional : Screen("traditional")
 
+    object LikesReceived : Screen("likes_received")
+
+    object LikesSent : Screen("likes_sent")
+
     object Anonymous : Screen("anonymous")
 
     object Chat : Screen("chat")

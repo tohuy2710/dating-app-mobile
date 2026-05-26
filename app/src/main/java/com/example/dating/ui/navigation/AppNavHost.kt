@@ -31,6 +31,8 @@ import com.example.dating.ui.profile.SettingsScreen
 import com.example.dating.ui.profile.UserProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 import com.example.dating.ui.anonymous.AnonymousMatchingScreen
+import com.example.dating.ui.profile.LikesReceivedScreen
+import com.example.dating.ui.profile.LikesSentScreen
 
 @Composable
 fun AppNavHost(
@@ -87,7 +89,28 @@ fun AppNavHost(
                         navController.navigate(
                             Screen.MatchProfile.route
                         )
+                    },
+                    onLikesReceivedClick = {
+                        navController.navigate("likes_received")
+                    },
+                    onLikesSentClick = {
+                        navController.navigate("likes_sent")
                     }
+                )
+            }
+
+            composable("likes_received") {
+
+                LikesReceivedScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable("likes_sent") {
+                LikesSentScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
 

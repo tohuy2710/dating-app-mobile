@@ -32,4 +32,12 @@ class DiscoveryRepository(
             )
         ).data
     }
+
+    suspend fun getReceivedRequests(page: Int, limit: Int): DiscoverResponse {
+        return api.getReceivedRequests(page = page, limit = limit).data
+    }
+
+    suspend fun getSentRequests(page: Int, limit: Int): DiscoverResponse {
+        return api.getSentRequests(page = page, limit = limit).data
+    }
 }
