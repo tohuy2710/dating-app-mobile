@@ -227,6 +227,8 @@ fun MessageItem(
         user = conversation.user,
         matchMode = conversation.matchMode
     )
+    val isImageMessage = conversation.lastMessage.startsWith("https://res.cloudinary.com/")
+    val displayLastMessage = if (isImageMessage) "[Ảnh]" else conversation.lastMessage
 
     Row(
         modifier = modifier
@@ -295,7 +297,7 @@ fun MessageItem(
             }
 
             Text(
-                text = conversation.lastMessage,
+                text = displayLastMessage,
                 style = MaterialTheme.typography.bodySmall,
                 color = secondaryTextColor,
                 maxLines = 1,

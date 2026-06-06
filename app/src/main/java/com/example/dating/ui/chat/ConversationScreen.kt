@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     https://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,9 @@
 
 package com.example.dating.ui.chat
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,12 +28,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,8 +46,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AttachFile
-import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +58,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,13 +66,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.icons.outlined.Mood
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.dating.ui.auth.uploadToCloudinary
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.ChatBubblePink
 import com.example.dating.ui.theme.ChatBubblePurple
@@ -80,9 +91,9 @@ import com.example.dating.ui.theme.LightSecondaryText
 import com.example.dating.ui.theme.LightSurface
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.Gray300
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.net.URLDecoder
 
 /**
  * Composable for a single message bubble in the conversation.
@@ -99,7 +110,9 @@ fun MessageBubble(
     } else {
         if (isDarkTheme) ChatBubblePink else ChatBubblePinkLight
     }
-    
+
+    val isImageMessage = message.content.startsWith("https://res.cloudinary.com/")
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -109,16 +122,28 @@ fun MessageBubble(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(bubbleColor)
-                .padding(12.dp)
+                .background(if (isImageMessage) Color.Transparent else bubbleColor)
+                .padding(if (isImageMessage) 0.dp else 12.dp)
                 .widthIn(max = 250.dp)
         ) {
-            Text(
-                text = message.content,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White,
-                fontWeight = FontWeight.Medium
-            )
+            if (isImageMessage) {
+                AsyncImage(
+                    model = message.content,
+                    contentDescription = "Image message",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                )
+            } else {
+                Text(
+                    text = message.content,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
@@ -238,6 +263,9 @@ fun MessageInputField(
     value: String,
     onValueChange: (String) -> Unit,
     onSendClick: () -> Unit,
+    onImagePickClick: () -> Unit,
+    onEmojiToggleClick: () -> Unit,
+    isUploading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -246,7 +274,7 @@ fun MessageInputField(
     val textColor = if (isDarkTheme) DarkText else LightText
     val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
     val sendButtonColor = if (isDarkTheme) ChatBubblePurple else ChatBubblePurpleLight
-    
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -256,27 +284,36 @@ fun MessageInputField(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        IconButton(
-            onClick = { },
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.CameraAlt,
-                contentDescription = "Camera",
-                tint = textColor,
-                modifier = Modifier.size(20.dp)
+        if (isUploading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = BrandPink,
+                strokeWidth = 2.dp
             )
+            Spacer(modifier = Modifier.width(4.dp))
+        } else {
+            IconButton(
+                onClick = onImagePickClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Image,
+                    contentDescription = "Gửi ảnh",
+                    tint = textColor,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
 
         IconButton(
-            onClick = { },
+            onClick = onEmojiToggleClick,
             modifier = Modifier.size(32.dp)
         ) {
             Icon(
-                imageVector = Icons.Outlined.AttachFile,
-                contentDescription = "Add",
+                imageVector = Icons.Outlined.Mood,
+                contentDescription = "Icon",
                 tint = textColor,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(22.dp)
             )
         }
 
@@ -311,13 +348,13 @@ fun MessageInputField(
 
         IconButton(
             onClick = onSendClick,
-            enabled = value.isNotBlank(),
+            enabled = value.isNotBlank() && !isUploading,
             modifier = Modifier.size(32.dp)
         ) {
             Icon(
                 imageVector = Icons.Outlined.Send,
                 contentDescription = "Send",
-                tint = if (value.isNotBlank()) {
+                tint = if (value.isNotBlank() && !isUploading) {
                     sendButtonColor
                 } else {
                     secondaryTextColor
@@ -343,7 +380,7 @@ fun ConversationScreen(
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
     val textColor = if (isDarkTheme) DarkText else LightText
-    
+
     when (val state = viewModel.conversationUiState) {
 
         ConversationUiState.Loading -> {
@@ -422,14 +459,36 @@ private fun ConversationScreenContent(
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
     val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
 
     var messageInput by remember { mutableStateOf("") }
+    var isUploading by remember { mutableStateOf(false) }
+    var showEmojiPicker by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
-
     val focusManager = LocalFocusManager.current
-
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    isUploading = true
+                    val url = uploadToCloudinary(uri, context)
+                    onSendMessage(url)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Lỗi khi gửi ảnh: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    isUploading = false
+                }
+            }
+        }
+    }
 
     // Scroll to bottom when new messages arrive or initially loaded
     LaunchedEffect(conversation.messages.size) {
@@ -464,6 +523,7 @@ private fun ConversationScreenContent(
                     onTap = {
                         focusManager.clearFocus()
                         keyboardController?.hide()
+                        showEmojiPicker = false
                     }
                 )
             }
@@ -540,6 +600,27 @@ private fun ConversationScreenContent(
             }
         }
 
+        androidx.compose.animation.AnimatedVisibility(visible = showEmojiPicker) {
+            androidx.compose.foundation.lazy.LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(surfaceColor)
+                    .padding(vertical = 12.dp, horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                val emojis = listOf("❤️", "😂", "👍", "🥺", "🔥", "🥰", "🎉", "✨", "😢", "😎", "💯", "💔")
+                items(emojis) { emoji ->
+                    Text(
+                        text = emoji,
+                        fontSize = 28.sp,
+                        modifier = Modifier.clickable {
+                            messageInput += emoji
+                        }
+                    )
+                }
+            }
+        }
+
         MessageInputField(
             value = messageInput,
             onValueChange = {
@@ -551,8 +632,17 @@ private fun ConversationScreenContent(
                     messageInput = ""
                     focusManager.clearFocus()
                     keyboardController?.hide()
+                    showEmojiPicker = false
                 }
-            }
+            },
+            onImagePickClick = {
+                imagePicker.launch("image/*")
+            },
+            onEmojiToggleClick = {
+                keyboardController?.hide()
+                showEmojiPicker = !showEmojiPicker
+            },
+            isUploading = isUploading
         )
     }
 }
