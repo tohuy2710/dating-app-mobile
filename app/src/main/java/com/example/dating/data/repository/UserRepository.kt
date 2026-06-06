@@ -47,4 +47,8 @@ class UserRepository(
     suspend fun getAvatar(): Avatar {
         return userApiService.getAvatar().data
     }
+
+    suspend fun getUserById(userId: Int): User {
+        return userApiService.getUserById(userId).data
+    }
 }

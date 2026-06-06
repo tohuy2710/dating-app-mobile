@@ -39,6 +39,7 @@ fun ChatOptionsScreen(
     matchId: Int,
     currentUserId: Int?,
     onBackClick: () -> Unit,
+    onAvatarClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ConversationViewModel = viewModel(
         factory = ConversationViewModelFactory(matchId)
@@ -84,6 +85,7 @@ fun ChatOptionsScreen(
                 onRespondUpgradeClick = { status ->
                     viewModel.respondToUpgrade(status)
                 },
+                onAvatarClick = { onAvatarClick(state.conversation.user.userId) },
                 modifier = modifier
             )
         }
@@ -119,6 +121,7 @@ private fun ChatOptionsScreenContent(
     onUnmatchClick: () -> Unit,
     onRequestUpgradeClick: () -> Unit,
     onRespondUpgradeClick: (String) -> Unit,
+    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -166,7 +169,11 @@ private fun ChatOptionsScreenContent(
             contentDescription = user.fullName,
             modifier = Modifier
                 .size(100.dp)
-                .clip(CircleShape),
+                .clip(CircleShape)
+                .clickable(
+                    enabled = matchMode != "anonymous",
+                    onClick = { onAvatarClick() }
+                ),
             contentScale = ContentScale.Crop
         )
 

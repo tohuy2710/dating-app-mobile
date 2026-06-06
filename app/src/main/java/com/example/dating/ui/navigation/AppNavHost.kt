@@ -34,6 +34,7 @@ import com.example.dating.ui.anonymous.AnonymousMatchingScreen
 import com.example.dating.ui.chat.ConversationViewModel
 import com.example.dating.ui.profile.LikesReceivedScreen
 import com.example.dating.ui.profile.LikesSentScreen
+import com.example.dating.ui.profile.MatchedUserProfileScreen
 
 @Composable
 fun AppNavHost(
@@ -208,6 +209,29 @@ fun AppNavHost(
                         matchId = matchId,
                         currentUserId = currentUserId,
                         viewModel = sharedViewModel,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onAvatarClick = { userId ->
+                            navController.navigate("matched_profile/$userId")
+                        }
+                    )
+                }
+            }
+
+            composable(
+                route = "matched_profile/{userId}",
+                arguments = listOf(
+                    navArgument("userId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStackEntry ->
+                val userId = backStackEntry.arguments?.getInt("userId")
+
+                if (userId != null) {
+                    MatchedUserProfileScreen(
+                        userId = userId,
                         onBackClick = {
                             navController.popBackStack()
                         }

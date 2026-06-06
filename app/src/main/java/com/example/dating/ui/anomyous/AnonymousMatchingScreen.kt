@@ -424,15 +424,7 @@ private fun AnimatedAnonymousCard() {
                 Box(
                     modifier = Modifier
                         .size(120.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    BrandPinkDark,
-                                    BrandPink
-                                )
-                            )
-                        ),
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -440,7 +432,7 @@ private fun AnimatedAnonymousCard() {
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(58.dp)
+                            .size(100.dp)
                             .clip(CircleShape)
                     )
                 }

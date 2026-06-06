@@ -35,4 +35,9 @@ interface UserApiService {
 
     @GET("api/users/avatar")
     suspend fun getAvatar(): ApiResponse<Avatar>
+
+    @GET("api/users/{userId}")
+    suspend fun getUserById(
+        @retrofit2.http.Path("userId") userId: Int
+    ): ApiResponse<User>
 }
