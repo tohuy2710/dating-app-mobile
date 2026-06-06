@@ -8,6 +8,8 @@ import com.example.dating.ui.chat.Message
 import com.example.dating.ui.chat.SuggestedConnection
 import com.example.dating.ui.chat.ChatUser
 import com.example.dating.ui.chat.MatchDetailResponseData
+import com.example.dating.ui.chat.MatchUpgradeRequest
+import com.example.dating.ui.chat.RespondUpgradeRequest
 
 class ChatRepository(
     private val matchesApiService: MatchesApiService
@@ -129,7 +131,8 @@ class ChatRepository(
                 unreadCount = data.unreadCount,
                 isTyping = false,
                 messages = sortedMessages,
-                matchMode = data.matchMode
+                matchMode = data.matchMode,
+                pendingUpgradeRequest = data.pendingUpgradeRequest
             )
 
         } catch (e: Exception) {
@@ -216,5 +219,13 @@ class ChatRepository(
 
     suspend fun fetchSuggestedConnections(): List<SuggestedConnection> {
         return emptyList()
+    }
+
+    suspend fun requestUpgrade(matchId: Int): MatchUpgradeRequest {
+        return matchesApiService.requestUpgrade(matchId).data
+    }
+
+    suspend fun respondToUpgrade(matchId: Int, status: String) {
+        matchesApiService.respondToUpgrade(matchId, RespondUpgradeRequest(status))
     }
 }

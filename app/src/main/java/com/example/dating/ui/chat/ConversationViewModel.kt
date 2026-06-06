@@ -16,6 +16,7 @@
 
 package com.example.dating.ui.chat
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -30,6 +31,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 import org.json.JSONObject
 import com.example.dating.core.socket.SocketManager
+import com.example.dating.ui.auth.LoginScreen
 
 class ConversationViewModel(
     savedStateHandle: SavedStateHandle
@@ -300,6 +302,44 @@ class ConversationViewModel(
      * Check if currently loading more messages.
      */
     fun isLoadingMoreMessages(): Boolean = isLoadingMore
+
+    fun requestUpgrade() {
+        viewModelScope.launch {
+            try {
+                val id = matchId ?: return@launch
+                Log.d("ChatOptions", "Đang gửi requestUpgrade cho matchId: $id")
+
+                val request = chatRepository.requestUpgrade(id)
+                Log.d("ChatOptions", "Gửi requestUpgrade thành công: $request")
+
+                val currentState = conversationUiState
+                if (currentState is ConversationUiState.Success) {
+                    val updatedConversation = currentState.conversation.copy(
+                        pendingUpgradeRequest = request
+                    )
+                    conversationUiState = ConversationUiState.Success(updatedConversation)
+                }
+            } catch (e: Exception) {
+                Log.e("ChatOptions", "Lỗi requestUpgrade: ${e.message}", e) // HIỂN THỊ LỖI LÊN LOGCAT
+            }
+        }
+    }
+
+    fun respondToUpgrade(status: String) {
+        viewModelScope.launch {
+            try {
+                val id = matchId ?: return@launch
+                Log.d("ChatOptions", "Đang gửi respondToUpgrade với status: $status cho matchId: $id")
+
+                chatRepository.respondToUpgrade(id, status)
+                Log.d("ChatOptions", "Respond thành công!")
+
+                loadConversationDetail()
+            } catch (e: Exception) {
+                Log.e("ChatOptions", "Lỗi respondToUpgrade: ${e.message}", e) // HIỂN THỊ LỖI LÊN LOGCAT
+            }
+        }
+    }
 }
 
 /**

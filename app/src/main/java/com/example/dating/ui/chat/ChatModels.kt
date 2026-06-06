@@ -108,7 +108,8 @@ data class Conversation(
     val unreadCount: Int = 0,
     val isTyping: Boolean = false,
     val messages: List<Message> = emptyList(),
-    val matchMode: String = "traditional"
+    val matchMode: String,
+    val pendingUpgradeRequest: MatchUpgradeRequest? = null
 )
 
 @Serializable
@@ -181,6 +182,40 @@ data class MatchWithUsers(
 )
 
 @Serializable
+data class MatchUpgradeRequest(
+    @SerialName("request_id")
+    val requestId: Int,
+
+    @SerialName("match_id")
+    val matchId: Int,
+
+    @SerialName("requester_id")
+    val requesterId: Int,
+
+    @SerialName("status")
+    val status: String, // "pending", "accepted", "rejected"
+
+    @SerialName("created_at")
+    val createdAt: String? = null,
+
+    @SerialName("updated_at")
+    val updatedAt: String? = null
+)
+
+@Serializable
+data class RespondUpgradeRequest(
+    val status: String
+)
+
+@Serializable
+data class RespondUpgradeResponseData(
+    val request: MatchUpgradeRequest,
+
+    @SerialName("match_mode")
+    val matchMode: String
+)
+
+@Serializable
 data class MatchDetailResponseData(
 
     @SerialName("match_id")
@@ -217,7 +252,10 @@ data class MatchDetailResponseData(
     val unreadCount: Int = 0,
 
     @SerialName("lastMessage")
-    val lastMessage: Message? = null
+    val lastMessage: Message? = null,
+
+    @SerialName("pendingUpgradeRequest")
+    val pendingUpgradeRequest: MatchUpgradeRequest? = null
 )
 
 sealed class ChatUiState {

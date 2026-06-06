@@ -31,6 +31,7 @@ import com.example.dating.ui.profile.SettingsScreen
 import com.example.dating.ui.profile.UserProfileScreen
 import com.example.dating.ui.traditional.TraditionalMatchingHomeScreen
 import com.example.dating.ui.anonymous.AnonymousMatchingScreen
+import com.example.dating.ui.chat.ConversationViewModel
 import com.example.dating.ui.profile.LikesReceivedScreen
 import com.example.dating.ui.profile.LikesSentScreen
 
@@ -197,8 +198,16 @@ fun AppNavHost(
 
                 if (matchId != null) {
 
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry(Screen.Conversation.route)
+                    }
+
+                    val sharedViewModel: ConversationViewModel = viewModel(parentEntry)
+
                     ChatOptionsScreen(
                         matchId = matchId,
+                        currentUserId = currentUserId,
+                        viewModel = sharedViewModel,
                         onBackClick = {
                             navController.popBackStack()
                         }

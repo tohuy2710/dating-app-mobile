@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -27,12 +29,15 @@ import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.LightBackground
 import com.example.dating.ui.theme.LightText
+import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.BrandPinkDark
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun ChatOptionsScreen(
     matchId: Int,
+    currentUserId: Int?,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ConversationViewModel = viewModel(
@@ -58,6 +63,8 @@ fun ChatOptionsScreen(
             ChatOptionsScreenContent(
                 user = state.conversation.user,
                 matchMode = state.conversation.matchMode,
+                pendingUpgradeRequest = state.conversation.pendingUpgradeRequest,
+                currentUserId = currentUserId,
                 onBackClick = onBackClick,
                 onBlockClick = {
                     // TODO: Implement block functionality
@@ -70,6 +77,12 @@ fun ChatOptionsScreen(
                 onUnmatchClick = {
                     viewModel.deleteMatch()
                     onBackClick()
+                },
+                onRequestUpgradeClick = {
+                    viewModel.requestUpgrade()
+                },
+                onRespondUpgradeClick = { status ->
+                    viewModel.respondToUpgrade(status)
                 },
                 modifier = modifier
             )
@@ -98,10 +111,14 @@ fun ChatOptionsScreen(
 private fun ChatOptionsScreenContent(
     user: ChatUser,
     matchMode: String,
+    pendingUpgradeRequest: MatchUpgradeRequest?,
+    currentUserId: Int?,
     onBackClick: () -> Unit,
     onBlockClick: () -> Unit,
     onReportClick: () -> Unit,
     onUnmatchClick: () -> Unit,
+    onRequestUpgradeClick: () -> Unit,
+    onRespondUpgradeClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -173,6 +190,56 @@ private fun ChatOptionsScreenContent(
                 .background(cardBackgroundColor)
                 .padding(vertical = 12.dp)
         ) {
+            if (matchMode == "anonymous" && currentUserId != null) {
+                if (pendingUpgradeRequest == null) {
+                    OptionItem(
+                        icon = Icons.Outlined.LockOpen,
+                        title = "Yêu cầu mở ẩn danh",
+                        onClick = onRequestUpgradeClick
+                    )
+                    Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
+                } else {
+                    if (pendingUpgradeRequest.requesterId == currentUserId) {
+                        OptionItem(
+                            icon = Icons.Outlined.Pending,
+                            title = "Đã yêu cầu mở. Đang chờ...",
+                            onClick = { /* Không làm gì */ }
+                        )
+                        Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
+                    } else {
+                        // Nhận được yêu cầu từ đối phương
+                        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+                            Text(
+                                text = "Đối phương muốn mở danh tính",
+                                color = textColor,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Button(
+                                    onClick = { onRespondUpgradeClick("accepted") },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = BrandPink)
+                                ) {
+                                    Text("Đồng ý", color = Color.White)
+                                }
+                                OutlinedButton(
+                                    onClick = { onRespondUpgradeClick("rejected") },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Từ chối", color = textColor)
+                                }
+                            }
+                        }
+                        Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
+                    }
+                }
+            }
+
             OptionItem(icon = Icons.Outlined.Block, title = "Block", onClick = onBlockClick)
             Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
 

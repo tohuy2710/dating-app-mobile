@@ -229,7 +229,7 @@ fun ProfileCard(user: User) {
 
                 Text(
                     text = "${user.fullName}",
-                    color = BrandPink,
+                    color = BrandPinkDark,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )

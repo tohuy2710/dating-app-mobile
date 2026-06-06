@@ -3,12 +3,16 @@ package com.example.dating.data.remote
 import com.example.dating.ui.chat.AnonymousMatchResponse
 import com.example.dating.ui.chat.ApiResponse
 import com.example.dating.ui.chat.MatchDetailResponseData
+import com.example.dating.ui.chat.MatchUpgradeRequest
 import com.example.dating.ui.chat.MatchesListResponseData
 import com.example.dating.ui.chat.Message
+import com.example.dating.ui.chat.RespondUpgradeRequest
+import com.example.dating.ui.chat.RespondUpgradeResponseData
 import com.example.dating.ui.chat.SendMessageRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -42,4 +46,15 @@ interface MatchesApiService {
 
     @POST("api/matches/anonymous")
     suspend fun anonymousMatch() : ApiResponse<AnonymousMatchResponse>
+
+    @POST("api/matches/{matchId}/upgrade-request")
+    suspend fun requestUpgrade(
+        @Path("matchId") matchId: Int
+    ): ApiResponse<MatchUpgradeRequest>
+
+    @PATCH("api/matches/{matchId}/upgrade-request")
+    suspend fun respondToUpgrade(
+        @Path("matchId") matchId: Int,
+        @Body request: RespondUpgradeRequest
+    ): ApiResponse<RespondUpgradeResponseData>
 }

@@ -438,7 +438,7 @@ private fun UserPersonalInfoCard(
         } else {
             Text(
                 text = name,
-                color = BrandPink,
+                color = BrandPinkDark,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
