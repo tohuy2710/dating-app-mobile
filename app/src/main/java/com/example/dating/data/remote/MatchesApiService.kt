@@ -9,6 +9,7 @@ import com.example.dating.ui.chat.Message
 import com.example.dating.ui.chat.RespondUpgradeRequest
 import com.example.dating.ui.chat.RespondUpgradeResponseData
 import com.example.dating.ui.chat.SendMessageRequest
+import kotlinx.serialization.json.JsonElement
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -46,6 +47,9 @@ interface MatchesApiService {
 
     @POST("api/matches/anonymous")
     suspend fun anonymousMatch() : ApiResponse<AnonymousMatchResponse>
+
+    @DELETE("api/matches/anonymous/queue")
+    suspend fun cancelAnonymousMatchQueue(): ApiResponse<JsonElement>
 
     @POST("api/matches/{matchId}/upgrade-request")
     suspend fun requestUpgrade(

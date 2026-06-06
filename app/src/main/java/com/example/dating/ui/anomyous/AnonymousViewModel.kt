@@ -111,8 +111,16 @@ class AnonymousViewModel : ViewModel() {
     }
 
     fun cancelMatching() {
-        countdownJob?.cancel()
-        anonymousUiState = AnonymousUiState.Idle
+        viewModelScope.launch {
+            try {
+                anonymousRepository.cancelAnonymousQueue()
+                resetState()
+                Log.d("AnonymousMatch", "Đã hủy tìm kiếm ẩn danh thành công")
+            } catch (e: Exception) {
+                Log.e("AnonymousMatch", "Lỗi khi hủy tìm kiếm: ${e.message}")
+                resetState()
+            }
+        }
     }
 
     fun resetState() {

@@ -54,9 +54,12 @@ fun AppNavHost(
     val hideBottomBar =
         currentRoute?.startsWith("conversation") == true ||
                 currentRoute?.startsWith("chat_options") == true ||
+                currentRoute?.startsWith("matched_profile") == true ||
                 currentRoute == Screen.MatchProfile.route ||
                 currentRoute == Screen.Settings.route ||
-                currentRoute == Screen.EditInterests.route
+                currentRoute == Screen.EditInterests.route ||
+                currentRoute == Screen.LikesReceived.route ||
+                currentRoute == Screen.LikesSent.route
 
     var selectedInterests by remember {
         mutableStateOf<List<String>>(emptyList())
@@ -103,7 +106,7 @@ fun AppNavHost(
                 )
             }
 
-            composable("likes_received") {
+            composable(Screen.LikesReceived.route) {
 
                 LikesReceivedScreen(
                     onBackClick = {
@@ -112,7 +115,7 @@ fun AppNavHost(
                 )
             }
 
-            composable("likes_sent") {
+            composable(Screen.LikesSent.route) {
                 LikesSentScreen(
                     onBackClick = { navController.popBackStack() }
                 )

@@ -18,4 +18,12 @@ class AnonymousRepository(
 
         return response.data
     }
+
+    suspend fun cancelAnonymousQueue() {
+        try {
+            apiService.cancelAnonymousMatchQueue()
+        } catch (e: Exception) {
+            throw Exception("Failed to cancel anonymous queue: ${e.message}", e)
+        }
+    }
 }
