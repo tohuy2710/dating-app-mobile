@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import com.example.dating.ui.theme.BrandPink
+import com.example.dating.ui.theme.BrandPinkDark
 import com.example.dating.ui.theme.DarkBackground
 import com.example.dating.ui.theme.DarkSurface
 import com.example.dating.ui.theme.DarkText
@@ -193,7 +195,6 @@ fun LikesReceivedEmptyState(
     }
 }
 
-// Bê nguyên TutorialPopup từ ProfileScreen sang đây
 @Composable
 private fun TutorialPopup(onUnderstandClick: () -> Unit) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -225,14 +226,23 @@ private fun TutorialPopup(onUnderstandClick: () -> Unit) {
 
             Button(
                 onClick = onUnderstandClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandPink,
-                    contentColor = White
-                ),
                 shape = RoundedCornerShape(999.dp),
-                modifier = Modifier.fillMaxWidth()
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = ButtonDefaults.ContentPadding,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(35.dp)
+                    .background(
+                        brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                        shape = RoundedCornerShape(999.dp)
+                    )
             ) {
-                Text("Đã rõ, không nhắc lại", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Đã rõ, không nhắc lại",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = White,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

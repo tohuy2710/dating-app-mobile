@@ -198,18 +198,13 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
                     UserManager.clearUserId()
 
-                    val userId = JwtUtils.getUserId(tokenEntity.token)
-                    UserManager.setUserId(userId)
-
                     onFinished(false, null)
 
                     return@launch
                 }
 
-                val userId =
-                    JwtUtils.getUserId(
-                        tokenEntity.token
-                    )
+                val userId = JwtUtils.getUserId(tokenEntity.token)
+                UserManager.setUserId(userId)
 
                 onFinished(
                     true,

@@ -159,7 +159,6 @@ private fun MatchNowButton(onClick: () -> Unit) {
     }
 }
 
-// CẬP NHẬT ACTION ROW ĐỂ BIẾN CÁC PHẦN TỬ THÀNH BUTTON CLICKABLE
 @Composable
 private fun ActionRow(
     onLikesReceivedClick: () -> Unit,
@@ -167,6 +166,7 @@ private fun ActionRow(
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface // Thêm surfaceColor
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
@@ -183,19 +183,19 @@ private fun ActionRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(58.dp)
                     .clip(CircleShape)
-                    .background(SecondaryPurple),
+                    .background(surfaceColor),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Likes Received",
-                    tint = White,
+                    tint = BrandPink,
                     modifier = Modifier.size(28.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Đã thích bạn",
                 style = MaterialTheme.typography.bodySmall,
@@ -213,19 +213,19 @@ private fun ActionRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(58.dp) //
                     .clip(CircleShape)
-                    .background(SecondaryPurple),
+                    .background(surfaceColor),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = "Likes Sent",
-                    tint = White,
+                    tint = BrandPink,
                     modifier = Modifier.size(28.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Bạn đã thích",
                 style = MaterialTheme.typography.bodySmall,

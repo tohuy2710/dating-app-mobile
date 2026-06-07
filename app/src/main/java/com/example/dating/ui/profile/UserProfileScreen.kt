@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -332,16 +333,19 @@ private fun UserActionButtons(
     onEditToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    FloatingActionButton(
-        onClick = onEditToggle,
-        containerColor = if (isEditing) Color(0xFF4CAF50) else BrandPink,
-        contentColor = White,
-        shape = CircleShape,
-        modifier = modifier.size(56.dp)
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(Brush.linearGradient(listOf(BrandPinkDark, BrandPink)))
+            .clickable(onClick = onEditToggle),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
-            if (isEditing) Icons.Default.Check else Icons.Default.Edit,
-            contentDescription = null
+            imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
+            contentDescription = if (isEditing) "Lưu thay đổi" else "Chỉnh sửa",
+            tint = White,
+            modifier = Modifier.size(24.dp)
         )
     }
 }

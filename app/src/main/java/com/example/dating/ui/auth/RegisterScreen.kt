@@ -547,7 +547,7 @@ private fun RegisterButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(68.dp),
+            .height(56.dp),
         shape = RoundedCornerShape(34.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)

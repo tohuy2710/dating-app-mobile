@@ -38,6 +38,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -468,14 +469,23 @@ private fun TutorialPopup(onUnderstandClick: () -> Unit) {
 
             Button(
                 onClick = onUnderstandClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandPink,
-                    contentColor = White
-                ),
                 shape = RoundedCornerShape(999.dp),
-                modifier = Modifier.fillMaxWidth()
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = ButtonDefaults.ContentPadding,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(35.dp)
+                    .background(
+                        brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                        shape = RoundedCornerShape(999.dp)
+                    )
             ) {
-                Text("Đã rõ, không nhắc lại", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Đã rõ, không nhắc lại",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = White,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
