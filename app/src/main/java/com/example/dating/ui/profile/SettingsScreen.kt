@@ -37,9 +37,9 @@ fun SettingsScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            SettingItem(Icons.Default.Notifications, "Thông báo")
-            SettingItem(Icons.Default.Security, "Quyền riêng tư và bảo mật")
-            SettingItem(Icons.Default.Visibility, "Cài đặt khám phá")
+//            SettingItem(Icons.Default.Notifications, "Thông báo")
+//            SettingItem(Icons.Default.Security, "Quyền riêng tư và bảo mật")
+//            SettingItem(Icons.Default.Visibility, "Cài đặt khám phá")
             
             Spacer(modifier = Modifier.height(24.dp))
             Button(
