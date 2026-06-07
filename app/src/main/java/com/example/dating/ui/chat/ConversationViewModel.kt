@@ -213,7 +213,7 @@ class ConversationViewModel(
     /**
      * Delete / Unmatch conversation.
      */
-    fun deleteMatch() {
+    fun deleteMatch(onSuccess: () -> Unit) {
 
         viewModelScope.launch {
 
@@ -222,6 +222,8 @@ class ConversationViewModel(
                 val id = matchId ?: return@launch
 
                 chatRepository.deleteMatch(id)
+
+                onSuccess()
 
             } catch (e: Exception) {
 

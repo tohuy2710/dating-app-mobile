@@ -51,6 +51,7 @@ fun ChatScreen(
             Lifecycle.State.RESUMED
         ) {
             viewModel.refreshConversations()
+            viewModel.clearSearch()
         }
     }
 

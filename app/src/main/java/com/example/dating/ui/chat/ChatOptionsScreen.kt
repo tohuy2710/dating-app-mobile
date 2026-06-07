@@ -9,10 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Pending
-import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -30,8 +30,6 @@ import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.LightBackground
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.BrandPink
-import com.example.dating.ui.theme.BrandPinkDark
-
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
@@ -40,6 +38,7 @@ fun ChatOptionsScreen(
     currentUserId: Int?,
     onBackClick: () -> Unit,
     onAvatarClick: (Int) -> Unit,
+    onUnmatchSuccess: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ConversationViewModel = viewModel(
         factory = ConversationViewModelFactory(matchId)
@@ -48,7 +47,7 @@ fun ChatOptionsScreen(
     val isDarkTheme = isSystemInDarkTheme()
     val backgroundColor = if (isDarkTheme) DarkBackground else LightBackground
     val textColor = if (isDarkTheme) DarkText else LightText
-    
+
     when (val state = viewModel.conversationUiState) {
         ConversationUiState.Loading -> {
             Box(
@@ -67,17 +66,10 @@ fun ChatOptionsScreen(
                 pendingUpgradeRequest = state.conversation.pendingUpgradeRequest,
                 currentUserId = currentUserId,
                 onBackClick = onBackClick,
-                onBlockClick = {
-                    // TODO: Implement block functionality
-                    onBackClick()
-                },
-                onReportClick = {
-                    // TODO: Implement report functionality
-                    onBackClick()
-                },
                 onUnmatchClick = {
-                    viewModel.deleteMatch()
-                    onBackClick()
+                    viewModel.deleteMatch(
+                        onSuccess = { onUnmatchSuccess() }
+                    )
                 },
                 onRequestUpgradeClick = {
                     viewModel.requestUpgrade()
@@ -85,7 +77,7 @@ fun ChatOptionsScreen(
                 onRespondUpgradeClick = { status ->
                     viewModel.respondToUpgrade(status)
                 },
-                onAvatarClick = { onAvatarClick(state.conversation.user.userId) },
+                onViewProfileClick = { onAvatarClick(state.conversation.user.userId) },
                 modifier = modifier
             )
         }
@@ -96,7 +88,7 @@ fun ChatOptionsScreen(
                     .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Error loading user", color = textColor)
+                Text(text = state.message, color = Color.Red, textAlign = TextAlign.Center)
             }
         }
         ConversationUiState.Idle -> {
@@ -116,12 +108,10 @@ private fun ChatOptionsScreenContent(
     pendingUpgradeRequest: MatchUpgradeRequest?,
     currentUserId: Int?,
     onBackClick: () -> Unit,
-    onBlockClick: () -> Unit,
-    onReportClick: () -> Unit,
     onUnmatchClick: () -> Unit,
     onRequestUpgradeClick: () -> Unit,
     onRespondUpgradeClick: (String) -> Unit,
-    onAvatarClick: () -> Unit,
+    onViewProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isDarkTheme = isSystemInDarkTheme()
@@ -134,7 +124,7 @@ private fun ChatOptionsScreenContent(
         user = user,
         matchMode = matchMode
     )
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -163,17 +153,13 @@ private fun ChatOptionsScreenContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Avatar
+        // Avatar (Đã gỡ bỏ clickable)
         AsyncImage(
             model = displayUser.avatar,
             contentDescription = user.fullName,
             modifier = Modifier
                 .size(100.dp)
-                .clip(CircleShape)
-                .clickable(
-                    enabled = matchMode != "anonymous",
-                    onClick = { onAvatarClick() }
-                ),
+                .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
 
@@ -197,6 +183,18 @@ private fun ChatOptionsScreenContent(
                 .background(cardBackgroundColor)
                 .padding(vertical = 12.dp)
         ) {
+
+            // Hiện tùy chọn "Xem trang cá nhân" nếu không phải ẩn danh
+            if (matchMode != "anonymous") {
+                OptionItem(
+                    icon = Icons.Outlined.Person,
+                    title = "Xem trang cá nhân",
+                    onClick = onViewProfileClick
+                )
+                Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
+            }
+
+            // Các chức năng liên quan đến ẩn danh
             if (matchMode == "anonymous" && currentUserId != null) {
                 if (pendingUpgradeRequest == null) {
                     OptionItem(
@@ -247,13 +245,11 @@ private fun ChatOptionsScreenContent(
                 }
             }
 
-            OptionItem(icon = Icons.Outlined.Block, title = "Block", onClick = onBlockClick)
-            Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
-
-            OptionItem(icon = Icons.Default.Report, title = "Report", onClick = onReportClick)
-            Divider(color = dividerColor, modifier = Modifier.padding(horizontal = 24.dp))
-
-            OptionItem(icon = Icons.Default.Delete, title = "Unmatch", onClick = onUnmatchClick)
+            OptionItem(
+                icon = Icons.Default.Delete,
+                title = "Hủy ghép đôi",
+                onClick = onUnmatchClick
+            )
         }
     }
 }
@@ -266,7 +262,7 @@ private fun OptionItem(
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val textColor = if (isDarkTheme) Color.White else Color.Black
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()

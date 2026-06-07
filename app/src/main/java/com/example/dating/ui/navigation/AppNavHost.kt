@@ -217,7 +217,10 @@ fun AppNavHost(
                         },
                         onAvatarClick = { userId ->
                             navController.navigate("matched_profile/$userId")
-                        }
+                        },
+                        onUnmatchSuccess = {
+                            navController.popBackStack(Screen.Chat.route, inclusive = false)
+                        },
                     )
                 }
             }

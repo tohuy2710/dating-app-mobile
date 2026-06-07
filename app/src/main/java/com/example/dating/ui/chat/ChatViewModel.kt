@@ -246,4 +246,11 @@ class ChatViewModel : ViewModel() {
     fun refreshConversations() {
         loadChatData(showLoading = false)
     }
+
+    fun clearSearch() {
+        if (searchQuery.isNotEmpty()) {
+            searchQuery = ""
+            searchJob?.cancel()
+        }
+    }
 }
