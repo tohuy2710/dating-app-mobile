@@ -24,12 +24,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,7 +68,9 @@ fun ChatSearchBar(
     val isDarkTheme = isSystemInDarkTheme()
     val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
     val textColor = if (isDarkTheme) DarkText else LightText
-    
+
+    val focusManager = LocalFocusManager.current
+
     TextField(
         value = searchQuery,
         onValueChange = onSearchQueryChange,
@@ -87,16 +93,18 @@ fun ChatSearchBar(
             )
         },
         singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(
+            onSearch = { focusManager.clearFocus() },
+            onDone = { focusManager.clearFocus() }
+        ),
         colors = TextFieldDefaults.colors(
             focusedTextColor = textColor,
             unfocusedTextColor = textColor,
-
             focusedContainerColor = surfaceColor,
             unfocusedContainerColor = surfaceColor,
-
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-
             cursorColor = BrandPink
         ),
         shape = RoundedCornerShape(16.dp),

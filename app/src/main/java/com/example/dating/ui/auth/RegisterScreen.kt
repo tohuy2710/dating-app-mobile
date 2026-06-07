@@ -240,7 +240,7 @@ fun RegisterScreen(
             leadingIcon = Icons.Outlined.AccountCircle
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         RegisterField(
             value = password.value,
@@ -250,7 +250,7 @@ fun RegisterScreen(
             visualTransformation = PasswordVisualTransformation()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         RegisterField(
             value = fullName.value,
@@ -259,7 +259,7 @@ fun RegisterScreen(
             leadingIcon = Icons.Outlined.Person
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         OutlinedTextField(
             value = dateDigits.value,
@@ -302,11 +302,9 @@ fun RegisterScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = gender.value,
+                value = genderLabel(gender.value),
                 onValueChange = {},
                 placeholder = { Text("Giới tính") },
                 leadingIcon = {
@@ -347,7 +345,7 @@ fun RegisterScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         RegisterField(
             value = bio.value,
@@ -356,7 +354,7 @@ fun RegisterScreen(
             leadingIcon = Icons.Outlined.Info
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Box(
             modifier = Modifier

@@ -143,7 +143,7 @@ fun LoginScreen(
 
             is LoginUiState.Error -> {
                 Text(
-                    text = state.message,
+                    text = "Đăng nhập thất bại, hãy kiểm tra lại tài khoản",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center

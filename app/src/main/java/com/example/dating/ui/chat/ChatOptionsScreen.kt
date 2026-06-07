@@ -1,5 +1,6 @@
 package com.example.dating.ui.chat
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -31,6 +33,8 @@ import com.example.dating.ui.theme.LightBackground
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.BrandPink
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dating.ui.theme.BrandPinkDark
+import com.example.dating.ui.theme.White
 
 @Composable
 fun ChatOptionsScreen(
@@ -227,16 +231,38 @@ private fun ChatOptionsScreenContent(
                             ) {
                                 Button(
                                     onClick = { onRespondUpgradeClick("accepted") },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = BrandPink)
+                                    modifier = Modifier
+                                        .height(50.dp)
+                                        .weight(1f)
+                                        .background(
+                                            brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                                            shape = RoundedCornerShape(999.dp)
+                                        ),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(999.dp)
                                 ) {
-                                    Text("Đồng ý", color = Color.White)
+                                    Text(
+                                        text = "Đồng ý",
+                                        color = White,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
+
                                 OutlinedButton(
                                     onClick = { onRespondUpgradeClick("rejected") },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .height(50.dp)
+                                        .weight(1f),
+                                    shape = RoundedCornerShape(999.dp),
+                                    border = BorderStroke(1.dp, BrandPink)
                                 ) {
-                                    Text("Từ chối", color = textColor)
+                                    Text(
+                                        text = "Từ chối",
+                                        color = textColor,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
                         }

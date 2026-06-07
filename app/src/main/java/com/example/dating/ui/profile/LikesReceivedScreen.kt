@@ -188,8 +188,23 @@ fun LikesReceivedEmptyState(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(onClick = onRetry) {
-                Text("Tải lại")
+            Button(
+                onClick = onRetry,
+                shape = RoundedCornerShape(999.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = ButtonDefaults.ContentPadding,
+                modifier = Modifier
+                    .background(
+                        brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                        shape = RoundedCornerShape(999.dp)
+                    )
+            ) {
+                Text(
+                    text = "Tải lại",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = White,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

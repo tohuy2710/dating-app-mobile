@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -164,23 +165,27 @@ fun AnonymousMatchingScreen(
                         viewModel.cancelMatching()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandPink
+                        containerColor = Color.Transparent
                     ),
-                    shape = RoundedCornerShape(999.dp)
+                    shape = RoundedCornerShape(999.dp),
+                    contentPadding = ButtonDefaults.ContentPadding,
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                            shape = RoundedCornerShape(999.dp)
+                        )
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
 
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = White
-                    )
-
-                    Spacer(modifier = Modifier.size(8.dp))
-
-                    Text(
-                        text = "Hủy",
-                        color = White
-                    )
+                        Text(
+                            text = "Hủy",
+                            color = White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             },
 
@@ -253,20 +258,22 @@ fun AnonymousMatchingScreen(
 
                 Button(
                     onClick = {
-
                         match?.matchId?.let { matchId ->
-
                             viewModel.resetState()
-
                             onNavigateToConversation(matchId)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandPink
+                        containerColor = Color.Transparent
                     ),
-                    shape = RoundedCornerShape(999.dp)
+                    shape = RoundedCornerShape(999.dp),
+                    contentPadding = ButtonDefaults.ContentPadding,
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                            shape = RoundedCornerShape(999.dp)
+                        )
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.Chat,
                         contentDescription = null,
@@ -277,7 +284,9 @@ fun AnonymousMatchingScreen(
 
                     Text(
                         text = "Nhắn tin ngay",
-                        color = White
+                        style = MaterialTheme.typography.titleMedium,
+                        color = White,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             },
@@ -323,10 +332,23 @@ fun AnonymousMatchingScreen(
                 Button(
                     onClick = {
                         viewModel.resetState()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(999.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                            shape = RoundedCornerShape(999.dp)
+                        )
                 ) {
-
-                    Text("OK")
+                    Text(
+                        text = "OK",
+                        color = White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
 
