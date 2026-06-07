@@ -83,6 +83,9 @@ data class UserPhoto(
     @SerialName("display_order")
     val displayOrder: Int? = null,
 
+    @SerialName("is_sfw")
+    val isSfw: Boolean,
+
     @SerialName("created_at")
     val createdAt: String? = null
 )
@@ -93,6 +96,7 @@ data class Photo(
     val user_id: Int,
     val image_url: String,
     val is_primary: Boolean,
+    val is_sfw: Boolean,
     val display_order: Int?
 )
 

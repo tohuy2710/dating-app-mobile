@@ -32,7 +32,7 @@ object AppConfig {
 //     const val API_BASE_URL = "http://10.0.2.2:5000/"
     
     // For physical device on same network, use your machine IP:
-     const val API_BASE_URL = "http://192.168.1.19:5000/"
+     const val API_BASE_URL = "http://192.168.1.18:5000/"
     
     // JWT Token Configuration
     // TODO: Replace with actual token from login endpoint when available

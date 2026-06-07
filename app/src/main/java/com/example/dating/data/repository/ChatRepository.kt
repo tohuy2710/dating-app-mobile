@@ -1,5 +1,6 @@
 package com.example.dating.data.repository
 
+import com.example.dating.core.auth.UserManager
 import com.example.dating.data.remote.MatchesApiService
 import com.example.dating.ui.chat.SendMessageRequest
 import com.example.dating.ui.chat.Conversation
@@ -14,10 +15,7 @@ import com.example.dating.ui.chat.RespondUpgradeRequest
 class ChatRepository(
     private val matchesApiService: MatchesApiService
 ) {
-
-    companion object {
-        private const val MAIN_USER_ID = 1
-    }
+    val currentUserId = UserManager.getUserId()
 
     suspend fun fetchConversations(
         page: Int,
@@ -32,7 +30,7 @@ class ChatRepository(
             response.data.matches.map { matchWithUsers: MatchWithUsers ->
 
                 val otherUser =
-                    if (matchWithUsers.user1Id == MAIN_USER_ID) {
+                    if (matchWithUsers.user1Id == currentUserId) {
                         matchWithUsers.user2
                     } else {
                         matchWithUsers.user1
@@ -95,7 +93,6 @@ class ChatRepository(
 
     suspend fun fetchConversationFromMatchDetail(
         matchId: Int,
-        currentUserId: Int = MAIN_USER_ID,
         messagesPage: Int = 1,
         messagesLimit: Int = 50
     ): Conversation {

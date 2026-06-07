@@ -10,6 +10,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 object DeviceTokenManager {
 
@@ -46,44 +47,25 @@ object DeviceTokenManager {
         }
     }
 
-    suspend fun unregisterDevice(
-        context: Context
-    ) {
+    suspend fun unregisterDevice(context: Context) {
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
 
-        FirebaseMessaging.getInstance()
-            .token
-            .addOnSuccessListener { token ->
+            kotlinx.coroutines.withContext(Dispatchers.IO) {
+                val deviceApiService =
+                    RetrofitClient.retrofitInstance.create(DeviceApiService::class.java)
 
-                CoroutineScope(Dispatchers.IO).launch {
+                deviceApiService.unregisterDevice(
+                    RegisterDeviceRequest(
+                        deviceToken = token,
+                        deviceType = "android"
+                    )
+                )
 
-                    try {
-
-                        val deviceApiService =
-                            RetrofitClient.retrofitInstance.create(
-                                DeviceApiService::class.java
-                            )
-
-                        deviceApiService.unregisterDevice(
-                            RegisterDeviceRequest(
-                                deviceToken = token,
-                                deviceType = "android"
-                            )
-                        )
-
-                        Log.d(
-                            "FCM",
-                            "UNREGISTER DEVICE SUCCESS"
-                        )
-
-                    } catch (e: Exception) {
-
-                        Log.e(
-                            "FCM",
-                            "UNREGISTER DEVICE ERROR",
-                            e
-                        )
-                    }
-                }
+                Log.d("FCM", "UNREGISTER DEVICE SUCCESS")
             }
+        } catch (e: Exception) {
+            Log.e("FCM", "UNREGISTER DEVICE ERROR", e)
+        }
     }
 }

@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.dating.DatingApplication
 import com.example.dating.core.auth.JwtUtils
 import com.example.dating.core.auth.TokenManager
+import com.example.dating.core.auth.UserManager
 import com.example.dating.data.model.LoginResponse
 import com.example.dating.data.model.RegisterRequest
 import com.example.dating.data.repository.AuthRepository
@@ -103,6 +104,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 // Save token to local database
                 authRepository.saveToken(result.token)
                 TokenManager.setToken(result.token)
+
+                val userId = result.user.userId
+                UserManager.setUserId(userId)
                 
                 // Clear password for security
                 passwordInput = ""
@@ -128,6 +132,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 authRepository.saveToken(result.token)
                 TokenManager.setToken(result.token)
 
+                val userId = result.user.userId
+                UserManager.setUserId(userId)
+
                 onResult(true, null)
             } catch (e: Exception) {
                 onResult(false, e.message)
@@ -152,6 +159,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             passwordInput = ""
             loginUiState = LoginUiState.Idle
             TokenManager.clearToken()
+            UserManager.clearUserId()
         }
     }
 
@@ -187,6 +195,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                     authRepository.clearTokens()
 
                     TokenManager.clearToken()
+
+                    UserManager.clearUserId()
+
+                    val userId = JwtUtils.getUserId(tokenEntity.token)
+                    UserManager.setUserId(userId)
 
                     onFinished(false, null)
 

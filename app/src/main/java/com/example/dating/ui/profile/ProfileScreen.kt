@@ -323,16 +323,56 @@ fun GalleryGrid(photos: List<UserPhoto>) {
             ) {
 
                 row.forEach { photo ->
+                    GalleryTile(photo = photo, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
 
-                    AsyncImage(
-                        model = photo.imageUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
+@Composable
+fun GalleryTile(photo: UserPhoto, modifier: Modifier = Modifier) {
+    LaunchedEffect(photo.photoId) {
+        android.util.Log.d("DEBUG_SFW", "Tile photoId: ${photo.photoId}, isSfw: ${photo.isSfw}, URL: ${photo.imageUrl}")
+    }
+    var isRevealed by remember { mutableStateOf(false) }
+    val showClear = photo.isSfw || isRevealed
+
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.Gray.copy(alpha = 0.2f))
+    ) {
+        AsyncImage(
+            model = photo.imageUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (!showClear) Modifier.graphicsLayer { alpha = 0.3f } else Modifier)
+        )
+
+        if (!showClear) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF4A4A4A).copy(alpha = 0.9f)),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Hình ảnh nhạy cảm",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                androidx.compose.material3.TextButton(
+                    onClick = { isRevealed = true },
+                    modifier = Modifier.background(Color.Black.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                ) {
+                    Text("Vẫn xem", color = Color.White, fontSize = 10.sp)
                 }
             }
         }
