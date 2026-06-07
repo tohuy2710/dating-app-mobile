@@ -83,8 +83,8 @@ fun LikesReceivedScreen(
                             },
                             onDragEnd = {
                                 when {
-                                    offsetX > 250 -> viewModel.likeUser(currentUser)
-                                    offsetX < -250 -> viewModel.passUser(currentUser)
+                                    offsetX > 120f -> viewModel.likeUser(currentUser)
+                                    offsetX < -120f -> viewModel.passUser(currentUser)
                                 }
                                 offsetX = 0f
                             }
