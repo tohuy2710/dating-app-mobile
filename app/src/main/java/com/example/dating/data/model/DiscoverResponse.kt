@@ -47,8 +47,8 @@ data class Match(
     val match_mode: String,
     val is_active: Boolean,
     val matched_at: String,
-    val user1: UserBase,
-    val user2: UserBase
+    val user1: UserBase? = null,
+    val user2: UserBase? = null
 )
 
 @Serializable

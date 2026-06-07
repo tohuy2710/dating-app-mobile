@@ -111,6 +111,11 @@ fun AppNavHost(
                 LikesReceivedScreen(
                     onBackClick = {
                         navController.popBackStack()
+                    },
+                    onNavigateToConversation = { matchId ->
+                        navController.navigate(
+                            Screen.Conversation.createRoute(matchId)
+                        )
                     }
                 )
             }
@@ -152,6 +157,11 @@ fun AppNavHost(
                 ProfileScreen(
                     onBackClick = {
                         navController.popBackStack()
+                    },
+                    onNavigateToConversation = { matchId ->
+                        navController.navigate(
+                            Screen.Conversation.createRoute(matchId)
+                        )
                     }
                 )
             }

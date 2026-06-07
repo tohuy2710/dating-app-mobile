@@ -41,6 +41,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -88,11 +91,13 @@ import java.util.Locale
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onNavigateToConversation: (Int) -> Unit = {},
     viewModel: DiscoveryViewModel = viewModel(),
 ) {
     val users by viewModel.users.collectAsState()
     val index by viewModel.index.collectAsState()
     val showTutorial by viewModel.showTutorial.collectAsState()
+    val newMatch by viewModel.newMatch.collectAsState()
 
     val currentUser = users.getOrNull(index)
 
@@ -187,6 +192,19 @@ fun ProfileScreen(
 
             TutorialPopup(
                 onUnderstandClick = { viewModel.completeTutorial() }
+            )
+        }
+
+        newMatch?.let { match ->
+            MatchSuccessDialog(
+                matchId = match.match_id, // Sử dụng trường ID từ model Match của bạn
+                onNavigateToConversation = { id ->
+                    viewModel.clearMatchState() // Xóa trạng thái và lùi index
+                    onNavigateToConversation(id)
+                },
+                onDismiss = {
+                    viewModel.clearMatchState() // Người dùng bấm ra ngoài hoặc tắt
+                }
             )
         }
     }
@@ -489,6 +507,75 @@ private fun TutorialPopup(onUnderstandClick: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun MatchSuccessDialog(
+    matchId: Int,
+    onNavigateToConversation: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = { onNavigateToConversation(matchId) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(999.dp),
+                contentPadding = ButtonDefaults.ContentPadding,
+                modifier = Modifier
+                    .background(
+                        brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                        shape = RoundedCornerShape(999.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Chat,
+                    contentDescription = null,
+                    tint = White
+                )
+
+                Spacer(modifier = Modifier.size(8.dp))
+
+                Text(
+                    text = "Nhắn tin ngay",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Để sau", color = secondaryTextColor)
+            }
+        },
+        title = {
+            Text(
+                text = "Hai bạn đã kết nối với nhau 🎉",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Tuyệt vời! Hai bạn đã tìm thấy nhau. Hãy bắt đầu cuộc trò chuyện ngay bây giờ.",
+                    color = secondaryTextColor
+                )
+            }
+        },
+        shape = RoundedCornerShape(28.dp),
+        containerColor = surfaceColor
+    )
 }
 
 @Preview(showBackground = true)

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dating.core.network.RetrofitClient
+import com.example.dating.data.model.Match
 import com.example.dating.data.model.User
 import com.example.dating.data.remote.DiscoveryApiService
 import com.example.dating.data.repository.DiscoveryRepository
@@ -30,6 +31,9 @@ class DiscoveryViewModel : ViewModel() {
 
     private val _showTutorial = MutableStateFlow(false)
     val showTutorial: StateFlow<Boolean> = _showTutorial.asStateFlow()
+
+    private val _newMatch = MutableStateFlow<Match?>(null)
+    val newMatch: StateFlow<Match?> = _newMatch.asStateFlow()
 
     private var currentPage = 1
     private var isLoading = false
@@ -98,10 +102,15 @@ class DiscoveryViewModel : ViewModel() {
 
                 Log.d("DiscoveryVM", "Match = ${result.match != null}")
 
-                nextUser()
+                if (result.match != null) {
+                    _newMatch.value = result.match
+                } else {
+                    nextUser()
+                }
 
             } catch (e: Exception) {
                 Log.e("DiscoveryVM", "interaction error", e)
+                nextUser()
             }
         }
     }
@@ -130,5 +139,10 @@ class DiscoveryViewModel : ViewModel() {
 
     fun hideTutorialLocally() {
         _showTutorial.value = false
+    }
+
+    fun clearMatchState() {
+        _newMatch.value = null
+        nextUser()
     }
 }

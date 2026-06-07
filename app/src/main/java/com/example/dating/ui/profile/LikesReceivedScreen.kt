@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,9 +31,11 @@ import kotlinx.coroutines.delay
 import com.example.dating.ui.theme.BrandPink
 import com.example.dating.ui.theme.BrandPinkDark
 import com.example.dating.ui.theme.DarkBackground
+import com.example.dating.ui.theme.DarkSecondaryText
 import com.example.dating.ui.theme.DarkSurface
 import com.example.dating.ui.theme.DarkText
 import com.example.dating.ui.theme.LightBackground
+import com.example.dating.ui.theme.LightSecondaryText
 import com.example.dating.ui.theme.LightSurface
 import com.example.dating.ui.theme.LightText
 import com.example.dating.ui.theme.White
@@ -41,11 +44,13 @@ import com.example.dating.ui.theme.White
 fun LikesReceivedScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onNavigateToConversation: (Int) -> Unit = {},
     viewModel: LikesReceivedViewModel = viewModel(),
 ) {
     val users by viewModel.users.collectAsState()
     val index by viewModel.index.collectAsState()
     val showTutorial by viewModel.showTutorial.collectAsState()
+    val newMatch by viewModel.newMatch.collectAsState()
 
     val currentUser = users.getOrNull(index)
 
@@ -141,6 +146,19 @@ fun LikesReceivedScreen(
 
             TutorialPopup(
                 onUnderstandClick = { viewModel.completeTutorial() }
+            )
+        }
+
+        newMatch?.let { match ->
+            MatchSuccessDialog(
+                matchId = match.match_id,
+                onNavigateToConversation = { id ->
+                    viewModel.clearMatchState()
+                    onNavigateToConversation(id)
+                },
+                onDismiss = {
+                    viewModel.clearMatchState()
+                }
             )
         }
     }
@@ -261,4 +279,73 @@ private fun TutorialPopup(onUnderstandClick: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun MatchSuccessDialog(
+    matchId: Int,
+    onNavigateToConversation: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDarkTheme = isSystemInDarkTheme()
+    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (isDarkTheme) DarkText else LightText
+    val secondaryTextColor = if (isDarkTheme) DarkSecondaryText else LightSecondaryText
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = { onNavigateToConversation(matchId) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(999.dp),
+                contentPadding = ButtonDefaults.ContentPadding,
+                modifier = Modifier
+                    .background(
+                        brush = Brush.linearGradient(listOf(BrandPinkDark, BrandPink)),
+                        shape = RoundedCornerShape(999.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Chat,
+                    contentDescription = null,
+                    tint = White
+                )
+
+                Spacer(modifier = Modifier.size(8.dp))
+
+                Text(
+                    text = "Nhắn tin ngay",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Để sau", color = secondaryTextColor)
+            }
+        },
+        title = {
+            Text(
+                text = "Hai bạn đã kết nối với nhau 🎉",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Tuyệt vời! Hai bạn đã tìm thấy nhau. Hãy bắt đầu cuộc trò chuyện ngay bây giờ.",
+                    color = secondaryTextColor
+                )
+            }
+        },
+        shape = RoundedCornerShape(28.dp),
+        containerColor = surfaceColor
+    )
 }
